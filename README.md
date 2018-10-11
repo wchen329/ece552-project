@@ -10,6 +10,7 @@ Please do not upload any files except .v files. .BAK files are used internally f
 
 ## Workflow
 Please (generally) do not commit to master. Instead, always commit to a new branch and...
-
-If you made no changes to existing modules please merge your branch into master when **all modules of that branch are done**
+####
+If you made no changes to existing modules please merge your branch into master when **all modules of that branch are done**.
+####
 If there is a potential for merge conflicts (i.e. editing a file already pushed to master) open a pull request when **all modules of that branch are done**.
