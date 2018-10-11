@@ -23,11 +23,11 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 	assign B_1s = ~ B;
 
 	// Now evaluate addition and subtraction
-	adder_4bit_cla_simple ADD( , sum_add, A, B, 0);
-	adder_4bit_cla_simple SUB( , sum_sub, A, B_1s, 1);
+	adder_4bit_cla_simple ADD( , , sum_add, A, B, 0);
+	adder_4bit_cla_simple SUB( , , sum_sub, A, B_1s, 1);
 	
 	// Calculate -B in parallel with the actual sum to be able to evaluate saturation
-	adder_4bit_cla_simple NEGATIVE_B( , neg_B, 0, B_1s, 1);
+	adder_4bit_cla_simple NEGATIVE_B( , , neg_B, 0, B_1s, 1);
 
 	// Choose non sat output based off of sub flag;
 	assign Sum_non_sat = Sub == 0 ? sum_add : sum_sub;
