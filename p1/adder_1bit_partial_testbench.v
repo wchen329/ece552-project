@@ -19,6 +19,7 @@ end
 always @(negedge clock) begin
 	if(Sum != A + B + Cin) begin
 		$display("Error detected. Sum mismatch");
+		$stop;
 	end
 end
 
