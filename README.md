@@ -9,7 +9,7 @@ Each project phase's files are located in a directory demarked p(#) where # is t
 Please do not upload any files except .v files. .BAK files are used internally for ModelSim's backup system and are not important for the actual project.
 
 ## Workflow
-Please (generally) do not commit to master. Instead, always commit to a new branch and...
+Please (generally) do not commit to master. Instead, always commit to a new branch (unless a merge commit) and...
 ####
 If you made no changes to existing modules please merge your branch into master when **all modules of that branch are done**.
 ####
