@@ -1,13 +1,13 @@
 /* Testbench for ALU.
  * Checks validity of associated arithmetic operations.
  *
- * Tests a million cases.
+ * Tests over a million cases.
  *
  * wchen329@wisc.edu
  */
 module ALU_no_check_testbench();
 
-	reg clock;
+	reg clock, overflow, z;
 
 	always #1 assign clock = ~clock;
 
@@ -20,11 +20,14 @@ module ALU_no_check_testbench();
 	// Reference values for each ALU operation
 	wire [15:0] ref_add, ref_sub, ref_xor, ref_red, ref_sll, ref_sra, ref_ror, ref_paddsb;
 	reg [15:0] ref_op;
-	wire overflow;
+	wire overflow_add, overflow_sub;
 
 	// Reference modules
-	addsub_16bit_cla ADD(ref_add, overflow, A, B, 0);
-	addsub_16bit_cla SUB(ref_sub, overflow, A, B, 1);
+	addsub_16bit_cla ADD(ref_add, overflow_add, A, B, 0);
+	addsub_16bit_cla SUB(ref_sub, overflow_sub, A, B, 1);
+	Shifter SLL(ref_sll, A, B[3:0], 3'b100 , ); 
+	Shifter SRA(ref_sra, A, B[3:0], 3'b101 , );
+	Shifter ROR(ref_ror, A, B[3:0], 3'b110 , );
 	xor_16bit XOR(ref_xor, A, B);
 
 	ALU_no_check ALU(A, B, op, result, flags);
@@ -115,6 +118,10 @@ module ALU_no_check_testbench();
 				op == 5 ? ref_sra :
 				op == 6 ? ref_ror :
 				op == 7 ? ref_paddsb : 0;
+
+		assign overflow = op == 0 ? overflow_add :
+				  op == 1 ? overflow_sub :
+				  'x;
 
 		// Test Flags
 		if(op != 7) begin
