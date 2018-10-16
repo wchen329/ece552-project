@@ -2,5 +2,5 @@
 *.wlf
 *.mti
 *.mpf
-p1/transcript
+transcript
 p1_stage/*.v
