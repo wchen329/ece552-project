@@ -1,5 +1,5 @@
 
-module SLL(Shift_Out, Shift_In, Shift_Val, Opcode, Z); 
+module Shifter(Shift_Out, Shift_In, Shift_Val, Opcode, Z); 
 
 input [15:0] Shift_In;
 input [3:0] Shift_Val;
