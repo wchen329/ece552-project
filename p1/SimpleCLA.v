@@ -20,8 +20,8 @@ module CLABlock4(cin, Pin, Gin, Cout, Pout, Gout);
         cin
     };
 
-    assign Pout = Pin[3] & Pin[2] & Pin[1] & Pin[0]
-    assign Gout = Gin[3] | (Pin[3] & Gin[2]) | (Pin[3] & Pin[2] & Gin[1]) | (Pin[3] & Pin[2] & Pin[1] & Gin[0])
+    assign Pout = Pin[3] & Pin[2] & Pin[1] & Pin[0];
+    assign Gout = Gin[3] | (Pin[3] & Gin[2]) | (Pin[3] & Pin[2] & Gin[1]) | (Pin[3] & Pin[2] & Pin[1] & Gin[0]);
 endmodule
 
 module CLABlock16(cin, Pin, Gin, Cout, Pout, Gout);
@@ -44,7 +44,7 @@ module CLAdder16(A, B, Sum);
     output[15:0] Sum;
 
     wire[15:0] P, G, C;
-    CLABlock16 cla_block(.cin(0), .Pin(P), .Gin(G), Cout(C), .Pout(), .Gout());
+    CLABlock16 cla_block(.cin(1'b0), .Pin(P), .Gin(G), .Cout(C), .Pout(), .Gout());
 
     CLABit bit0(.a(A[0]), .b(B[0]), .cin(C[0]), .p(P[0]), .g(G[0]), .s(Sum[0]));
     CLABit bit1(.a(A[1]), .b(B[1]), .cin(C[1]), .p(P[1]), .g(G[1]), .s(Sum[1]));
