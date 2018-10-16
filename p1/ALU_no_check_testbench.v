@@ -12,8 +12,7 @@ module ALU_no_check_testbench();
 	always #1 assign clock = ~clock;
 
 	// Stimuli
-	reg [15:0] A, B, neg_B, add_inter, sub_inter;
-	reg [3:0] paddsb_1, paddsb_2, paddsb_3, paddsb_4;
+	reg [15:0] A, B;
 	reg [2:0] op;
 	wire [15:0] result;
 	wire [2:0] flags;
