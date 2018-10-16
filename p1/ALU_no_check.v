@@ -25,7 +25,7 @@ module ALU_no_check(A, B, op, out, flags);
 	xor_16bit XOR(xor_out, A, B); 
 	PADDSB_16bit_cla PADDSB(paddsb_out, A, B);
 	Shifter SSLSRAROR(shift_out, A, B[3:0], op ,);
-	//RED REDUCTION(A, B, red_out);
+	RED REDUCTION(A, B, red_out);
 
 	assign out =
 	op == 0 ? add_out :

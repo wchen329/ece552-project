@@ -23,12 +23,14 @@ module ALU_no_check_testbench();
 	wire overflow_add, overflow_sub;
 
 	// Reference modules
-	addsub_16bit_cla ADD(ref_add, overflow_add, A, B, 0);
-	addsub_16bit_cla SUB(ref_sub, overflow_sub, A, B, 1);
+	addsub_16bit_cla ADD(ref_add, overflow_add, A, B, 1'b0);
+	addsub_16bit_cla SUB(ref_sub, overflow_sub, A, B, 1'b1);
 	Shifter SLL(ref_sll, A, B[3:0], 3'b100 , ); 
 	Shifter SRA(ref_sra, A, B[3:0], 3'b101 , );
 	Shifter ROR(ref_ror, A, B[3:0], 3'b110 , );
 	xor_16bit XOR(ref_xor, A, B);
+	PADDSB_16bit_cla PADDSB(ref_paddsb, A, B);
+	RED REDUCTION(A, B, ref_red);
 
 	ALU_no_check ALU(A, B, op, result, flags);
 
