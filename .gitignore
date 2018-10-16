@@ -3,3 +3,4 @@
 *.mti
 *.mpf
 p1/transcript
+p1_stage/*.v
