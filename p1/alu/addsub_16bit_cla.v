@@ -1,10 +1,13 @@
 /* A 16-bit carry look ahead adder for ADD/SUB
  * implements saturation.
  *
+ * Sets an "Overflow" flag when saturation occurs.
+ *
  * wchen329@wisc.edu
  */
-module addsub_16bit_cla(Sum, A, B, Sub);
+module addsub_16bit_cla(Sum, Ovfl, A, B, Sub);
 	output [15:0] Sum;
+	output Ovfl;
 	input [15:0] A, B;
 	input Sub;
 
@@ -40,5 +43,11 @@ module addsub_16bit_cla(Sum, A, B, Sub);
 			: Inter_Sum[15] == 0 ? 16'b1000000000000000
 				: 16'b0111111111111111
 		: Inter_Sum;
+
+	
+	assign Ovfl = A[15] == B_real[15] ?
+			A[15] == Inter_Sum[15] ? 0 : 1 
+		:0;
+
 
 endmodule

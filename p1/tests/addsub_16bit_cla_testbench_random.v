@@ -6,12 +6,13 @@
 module addsub_16bit_cla_testbench_random();
 
 	reg [15:0] A, B, sub_ref, add_ref, sub_inter, add_inter, neg_B;
-	reg clock, Sub;	
+	reg clock, Sub;
 	wire [15:0] Sum;
+	wire Ovfl;
 
 	always #1 assign clock = ~clock;
 
-	addsub_16bit_cla DUT(Sum, A, B, Sub);	
+	addsub_16bit_cla DUT(Sum, Ovfl, A, B, Sub);	
 
 always@(posedge clock) begin
 	assign Sub = Sub + $random;
@@ -32,6 +33,12 @@ always@(negedge clock) begin
 	 */
 	if(A[15] == B[15] && add_inter[15] != A[15]) begin
 
+		// Check for Overflow flag being set
+		if(Ovfl == 0 && Sub == 0) begin
+			$display("Overflow occurred, but corresponding flag not set");
+			$stop;	
+		end
+
 		// Case 1, add two positive numbers and saturate at most positive
 		if(A[15] == 0) begin 
 			assign add_ref = 16'b0111111111111111;
@@ -45,12 +52,23 @@ always@(negedge clock) begin
 
 	else begin
 		assign add_ref = add_inter;
+
+		if(Ovfl == 1 && Sub == 0) begin
+			$display("Overflow did not occur, but corresponding flag set");
+			$stop;
+		end
+
 	end
 
 	/* Subtractor Values
 	 *
 	 */
 	if(A[15] == neg_B[15] && sub_inter[15] != A[15]) begin
+
+		if(Ovfl == 0 && Sub == 1) begin
+			$display("Overflow occurred, but corresponding flag not set");
+			$stop;
+		end
 
 		// Case 1, add two positive numbers and saturate at most positive
 		if(A[15] == 0) begin 
@@ -66,6 +84,11 @@ always@(negedge clock) begin
 
 	else begin
 		assign sub_ref = sub_inter;
+
+		if(Ovfl == 1 && Sub == 1) begin
+			$display("Overflow did not occur, but corresponding flag set");
+			$stop;
+		end
 	end
 
 	// Probe
