@@ -10,7 +10,7 @@ adder_2byte ADD2(temp2, Ov2, A[7:0], B[7:0]);
 
 adder_2byte ADD3(temp3, Ov3, temp1, temp2); 
 
-assign Reduction = {temp3[7], temp3[7], temp3[7], temp3[7], temp3[7], temp3[7], temp3[7], temp3[7], temp3}; 
+  assign Reduction = {{8{temp3[7]}}, temp3}; 
 
 
 
