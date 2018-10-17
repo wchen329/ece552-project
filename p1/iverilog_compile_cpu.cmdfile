@@ -19,6 +19,9 @@ adder_primitives/adder_1bit_partial.v
 adder_primitives/adder_1bit_cla_unit.v
 adder_primitives/adder_4bit_cla_simple.v
 adder_primitives/adder_8bit_cla_simple.v
+adder_primitives/adder_8bit.v
+adder_primitives/adder_9bit.v
+adder_primitives/full_adder_1_bit.v
 
 alu/addsub_4bit_cla.v
 alu/addsub_16bit_cla.v
