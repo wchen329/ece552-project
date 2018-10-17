@@ -26,7 +26,7 @@ module cpu(clk, rst_n, hlt, pc);
     wire[15:0] read_data1, read_data2, write_data;
     wire[2:0] newFLAG, FLAG;
     RegisterFile_simple reg_file(.clk(clk),
-                          .rst(rst_n),
+                          .rst(~rst_n),
                           .WriteReg(RFwe),
                           .SrcReg1(inst[7:4]),
                           .SrcReg2(A2Src?inst[11:8]:inst[3:0]),
