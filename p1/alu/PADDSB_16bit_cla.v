@@ -4,8 +4,8 @@
  * wchen329@wisc.edu
  */
 module PADDSB_16bit_cla(Sum, A, B);
-	output [16:0] Sum;
-	input [16:0] A, B;
+	output [15:0] Sum;
+	input [15:0] A, B;
 
 	// Calculate word sums, saturation is handled down one level
 	addsub_4bit_cla HB_0(Sum[3:0], A[3:0], B[3:0], 1'b0);
