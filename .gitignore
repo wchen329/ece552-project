@@ -1,6 +1,11 @@
 *.bak
+*.qdb
+*.qpg
+*.qtl
 *.wlf
 *.mti
 *.mpf
 transcript
 p1_stage/*.v
+_info
+_vmake
