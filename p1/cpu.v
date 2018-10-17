@@ -58,7 +58,7 @@ module cpu(clk, rst_n, hlt, pc);
                       .enable(1'b1),
                       .wr(MemWE),
                       .clk(clk),
-                      .rst(rst_n));
+                      .rst(~rst_n));
 
     // RegisterFile write back
     assign write_data = (DwMUX == 2'b00) ? ALUout :
