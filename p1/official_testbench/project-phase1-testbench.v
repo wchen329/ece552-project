@@ -170,7 +170,7 @@ module cpu_tb();
 // assign WriteData = DUT.decode0.regFile0.writedata;
    // Data being written to the register. (16 bits)
    
-   assign MemRead =  DUT.data_mem.enable & ~DUT.data_mem.wr;
+   assign MemRead =  DUT.MemoryRead;
 //   assign MemRead =  DUT.memory0.memRead;
    // Is memory being read, one bit signal (1 means yes, 0 means no)
    
