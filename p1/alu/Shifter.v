@@ -4,7 +4,7 @@ module Shifter(Shift_Out, Shift_In, Shift_Val, Opcode, Z);
 input [15:0] Shift_In;
 input [3:0] Shift_Val;
 output [15:0] Shift_Out;
-input [3:0] Opcode; 
+input [2:0] Opcode; 
 output Z;
 wire Z_sll, Z_sra, Z_ror;
 

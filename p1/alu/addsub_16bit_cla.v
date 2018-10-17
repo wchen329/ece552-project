@@ -29,10 +29,10 @@ module addsub_16bit_cla(Sum, Ovfl, A, B, Sub);
 	adder_4bit_cla_simple BLOCK_3 (, g[3], Inter_Sum[15:12], A[15:12], B_operating[15:12], g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & Cin_operating))))));
 
 	// Also calculate negative B for comparison in parallel
-	adder_4bit_cla_simple B_0_NEG_B(p_neg[0], g_neg[0], Neg_B[3:0], 0, B_operating[3:0], 1);
-	adder_4bit_cla_simple B_1_NEG_B(p_neg[1], g_neg[1], Neg_B[7:4], 0, B_operating[7:4], g_neg[0] | (p_neg[0]));
-	adder_4bit_cla_simple B_2_NEG_B(p_neg[2], g_neg[2], Neg_B[11:8], 0, B_operating[11:8], g_neg[1] | (p_neg[1] & (g_neg[0] | (p_neg[0]))));
-	adder_4bit_cla_simple B_3_NEG_B(,, Neg_B[15:12], 0, B_operating[15:12], g_neg[2] | (p_neg[2] & (g_neg[1] | (p_neg[1] & (g_neg[0] | (p_neg[0]))))));
+	adder_4bit_cla_simple B_0_NEG_B(p_neg[0], g_neg[0], Neg_B[3:0], 4'b0000, B_operating[3:0], 1'b1);
+	adder_4bit_cla_simple B_1_NEG_B(p_neg[1], g_neg[1], Neg_B[7:4], 4'b0000, B_operating[7:4], g_neg[0] | (p_neg[0]));
+	adder_4bit_cla_simple B_2_NEG_B(p_neg[2], g_neg[2], Neg_B[11:8], 4'b0000, B_operating[11:8], g_neg[1] | (p_neg[1] & (g_neg[0] | (p_neg[0]))));
+	adder_4bit_cla_simple B_3_NEG_B(,, Neg_B[15:12], 4'b0000, B_operating[15:12], g_neg[2] | (p_neg[2] & (g_neg[1] | (p_neg[1] & (g_neg[0] | (p_neg[0]))))));
 
 	// Select correct value of B for comparison check of saturation
 	assign B_real = Sub == 0? B : Neg_B;
