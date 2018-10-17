@@ -19,7 +19,7 @@ module PC_control_toplevel(Branch_Inst, Register_In, Rs_In, C, Imm, Flags, curre
 	wire [15:0] no_branch, branch, branch_imm, branch_reg;
 
 	CLAdder16 NO_BRANCH(.Sum(no_branch), .A(current_PC), .B(16'h2));
-	PC_control BRANCH(C, Imm, F, current_PC, branch_imm);
+	PC_control BRANCH(C, Imm, Flags, current_PC, branch_imm);
 
 	assign branch_reg = Rs_In;
 
