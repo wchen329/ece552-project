@@ -8,6 +8,7 @@
 *.log
 *.trace
 *.mpf
+*.img
 transcript
 p1_stage/*.v
 _info
