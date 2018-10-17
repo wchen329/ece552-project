@@ -41,7 +41,6 @@ MemAddrUnit.v
 provided/memory_data.v
 
 # PC control & branching control
-pc_control/Check_Branch.v
 pc_control/PC_control_toplevel.v
 pc_control/PC_control.v
 
