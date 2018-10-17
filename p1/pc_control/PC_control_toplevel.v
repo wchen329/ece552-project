@@ -21,8 +21,7 @@ module PC_control_toplevel(Branch_Inst, Register_In, Rs_In, C, Imm, Flags, curre
 	CLAdder16 NO_BRANCH(.Sum(no_branch), .A(current_PC), .B(16'h2));
 	PC_control BRANCH(C, Imm, F, current_PC, branch_imm);
 
-	// remove unaligned part of register if present
-	assign branch_reg = Rs_In & -2;
+	assign branch_reg = Rs_In;
 
 	assign branch = Register_In == 0 ? branch_imm : branch_reg;
 	assign next_PC = Branch_Inst == 0 ? no_branch : branch;
