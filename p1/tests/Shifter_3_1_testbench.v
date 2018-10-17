@@ -1,4 +1,5 @@
-/* A simple exhaustive testbench for the shifter.
+/* A simple exhaustive testbench for the shifter. This one only tests SLL and SRA.
+ * ROR has its own testbench.
  *
  * Runs for all 2^21 cases so exhaustive indeed.
  *

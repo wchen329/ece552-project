@@ -4,7 +4,7 @@ module cpu(clk, rst_n, hlt, pc);
     output[15:0] pc;
 
     // control signals
-    wire PCwe, RFwe, MemWE, NeedBranch, ALU2Src, A2Src;
+    wire PCwe, RFwe, MemWE, NeedBranch, ALU2Src, A2Src, MemoryRead;
     wire[2:0] FLAGwe; // {Z,V,N}
     wire[1:0] DwMUX;
 
@@ -59,6 +59,8 @@ module cpu(clk, rst_n, hlt, pc);
                       .wr(MemWE),
                       .clk(clk),
                       .rst(~rst_n));
+
+    assign MemoryRead = (DwMUX == 2'b01) ? 1 : 0;
 
     // RegisterFile write back
     assign write_data = (DwMUX == 2'b00) ? ALUout :

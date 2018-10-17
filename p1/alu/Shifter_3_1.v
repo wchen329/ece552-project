@@ -89,7 +89,7 @@ wire[15:0] ror_1, ror_2, ror_3, ror_6, ror_9, ROR_In_L1, ROR_In_L2;
 assign ror_1 = {Shift_In[0], Shift_In[15:1]}; assign ror_2 = {Shift_In[1], Shift_In[0], Shift_In[15:2]};
 assign ror_3 = {ROR_In_L1[2], ROR_In_L1[1], ROR_In_L1[0], ROR_In_L1[15:3]};
 assign ror_6 = {ROR_In_L1[5], ROR_In_L1[4], ROR_In_L1[3], ROR_In_L1[2], ROR_In_L1[1], ROR_In_L1[0], ROR_In_L1[15:6]};
-assign ror_9 = {ROR_In_L1[8], ROR_In_L1[7], ROR_In_L1[6], ROR_In_L1[5], ROR_In_L1[4], ROR_In_L1[3], ROR_In_L1[2], ROR_In_L1[1], ROR_In_L1[0], ROR_In_L2[15:9]};
+assign ror_9 = {ROR_In_L2[8], ROR_In_L2[7], ROR_In_L2[6], ROR_In_L2[5], ROR_In_L2[4], ROR_In_L2[3], ROR_In_L2[2], ROR_In_L2[1], ROR_In_L2[0], ROR_In_L2[15:9]};
 
 mux_3_1_array_16 LEVEL_0_RO(ROR_In_L1 , Shift_In, ror_1, ror_2, s_level0);
 mux_3_1_array_16 LEVEL_1_RO(ROR_In_L2 , ROR_In_L1, ror_3, ror_6, s_level1);
