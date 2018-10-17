@@ -22,7 +22,7 @@ module RegisterFile_simple(input clk, input rst, input [3:0] SrcReg1, input[3:0]
 
 	// 16 Registers
 
-	Register REG_0(clk, 1, DstData, write_sig_dst[0], read_sig_r1[0], read_sig_r2[0], read_bus_1, read_bus_2);
+	Register REG_0(clk, 1'b1, DstData, write_sig_dst[0], read_sig_r1[0], read_sig_r2[0], read_bus_1, read_bus_2);
 	Register REG_1(clk, rst, DstData, write_sig_dst[1], read_sig_r1[1], read_sig_r2[1], read_bus_1, read_bus_2);
 	Register REG_2(clk, rst, DstData, write_sig_dst[2], read_sig_r1[2], read_sig_r2[2], read_bus_1, read_bus_2);
 	Register REG_3(clk, rst, DstData, write_sig_dst[3], read_sig_r1[3], read_sig_r2[3], read_bus_1, read_bus_2);

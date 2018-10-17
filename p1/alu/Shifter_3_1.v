@@ -72,7 +72,7 @@ assign sll_9 = SLL_In_L2 << 9;
 
 mux_3_1_array_16 LEVEL_0_LL(SLL_In_L1 , Shift_In, sll_1, sll_2, s_level0);
 mux_3_1_array_16 LEVEL_1_LL(SLL_In_L2 , SLL_In_L1, sll_3, sll_6, s_level1);
-mux_3_1_array_16 LEVEL_2_LL(sll_out , SLL_In_L2, sll_9, 0, s_level2);
+mux_3_1_array_16 LEVEL_2_LL(sll_out , SLL_In_L2, sll_9, {16{1'b0}}, s_level2);
 
 // SRA
 wire[15:0] sra_1, sra_2, sra_3, sra_6, sra_9, SRA_In_L1, SRA_In_L2;
@@ -82,7 +82,7 @@ assign sra_9 = {{9{SRA_In_L2[15]}}, SRA_In_L2[15:9]};
 
 mux_3_1_array_16 LEVEL_0_RA(SRA_In_L1 , Shift_In, sra_1, sra_2, s_level0);
 mux_3_1_array_16 LEVEL_1_RA(SRA_In_L2 , SRA_In_L1, sra_3, sra_6, s_level1);
-mux_3_1_array_16 LEVEL_2_RA(sra_out , SRA_In_L2, sra_9, 0, s_level2);
+mux_3_1_array_16 LEVEL_2_RA(sra_out , SRA_In_L2, sra_9, {16{1'b0}}, s_level2);
 
 // ROR
 wire[15:0] ror_1, ror_2, ror_3, ror_6, ror_9, ROR_In_L1, ROR_In_L2;
@@ -93,7 +93,7 @@ assign ror_9 = {ROR_In_L2[8], ROR_In_L2[7], ROR_In_L2[6], ROR_In_L2[5], ROR_In_L
 
 mux_3_1_array_16 LEVEL_0_RO(ROR_In_L1 , Shift_In, ror_1, ror_2, s_level0);
 mux_3_1_array_16 LEVEL_1_RO(ROR_In_L2 , ROR_In_L1, ror_3, ror_6, s_level1);
-mux_3_1_array_16 LEVEL_2_RO(ror_out , ROR_In_L2, ror_9, 0, s_level2);
+mux_3_1_array_16 LEVEL_2_RO(ror_out , ROR_In_L2, ror_9, {16{1'b0}}, s_level2);
 
 assign Shift_Out = Opcode[1:0] == 0 ? sll_out :
 		   Opcode[1:0] == 1 ? sra_out :
