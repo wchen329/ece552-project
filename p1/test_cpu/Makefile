@@ -1,7 +1,7 @@
 .ONESHELL:
 cpu_tb:
 	cd ..
-	iverilog -c iverilog_compile_cpu.cmdfile cpu_test/cpu_tb.v -Wall -s cpu_tb -o cpu_test/cpu_tb
+	iverilog -c iverilog_compile_cpu.cmdfile test_cpu/cpu_tb.v -Wall -s cpu_tb -o test_cpu/cpu_tb
 
 %.bin: src/%.asm
 	perl ../../wiscasm/assembler.pl $< > $@
