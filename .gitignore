@@ -4,6 +4,9 @@
 *.qtl
 *.wlf
 *.mti
+*.vcd
+*.log
+*.trace
 *.mpf
 transcript
 p1_stage/*.v
