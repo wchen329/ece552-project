@@ -14,7 +14,7 @@ module cpu(clk, rst_n, hlt, pc);
     wire [15:0] pcPlus2;
     PCRegister pc_reg(.clk(clk), .rst_n(rst_n), .we(PCwe), .P(newPC), .Q(pc));
     CLAdder16 pc_add_2(.A(pc), .B(16'h2), .Sum(pcPlus2));
-    memory1c inst_mem(.data_out(inst),
+    memory1c_inst inst_mem(.data_out(inst),
                       .data_in(16'hFFFF),
                       .addr(pc),
                       .enable(1'b1),
@@ -25,15 +25,15 @@ module cpu(clk, rst_n, hlt, pc);
     // Register File & FLAG register
     wire[15:0] read_data1, read_data2, write_data;
     wire[2:0] newFLAG, FLAG;
-    RegisterFile reg_file(.clk(clk),
+    RegisterFile_simple reg_file(.clk(clk),
                           .rst(rst_n),
-                          .we(RFwe),
-                          .read_addr1(inst[7:4])),
-                          .read_addr2(A2Src?inst[11:8]:inst[3:0]),
-                          .write_addr(inst[11:8]),
-                          .write_data(write_data),
-                          .read_data1(read_data1),
-                          .read_data2(read_data2));
+                          .WriteReg(RFwe),
+                          .SrcReg1(inst[7:4]),
+                          .SrcReg2(A2Src?inst[11:8]:inst[3:0]),
+                          .DstReg(inst[11:8]),
+                          .DstData(write_data),
+                          .SrcData1(read_data1),
+                          .SrcData2(read_data2));
     FlagRegister flag_reg(.clk(clk),
                           .rst_n(rst_n),
                           .we(FLAGwe),
@@ -52,7 +52,7 @@ module cpu(clk, rst_n, hlt, pc);
 
     // Data memory
     wire[15:0] MEMout;
-    memory1c data_mem(.data_out(MEMout),
+    memory1c_data data_mem(.data_out(MEMout),
                       .data_in(read_data2),
                       .addr(MemAddr),
                       .enable(1'b1),
@@ -76,15 +76,15 @@ module cpu(clk, rst_n, hlt, pc);
                           .NeedBranch(NeedBranch),
                           .ALU2Src(ALU2Src),
                           .A2Src(A2Src),
-                          .DwMUX(DwMux));
+                          .DwMUX(DwMUX));
 
     // PC control
-    wire[15:0] targetB;
-    wire conditionOK;
-    ConditionUnit condition_unit(...); // TODO
-    CLAdder16 target_b_adder(.A(pcPlus2), .B({ {6{inst[8]}}, inst[8:0], 1'b0 }, .Sum(targetB)));
-    assign newPC = ~NeedBranch  ? pcPlus2 :
-                   ~conditionOK ? pcPlus2 :
-                   inst[12]     ? read_data1 : targetB;
-
+    PC_control_toplevel pc_control(.Branch_Inst(NeedBranch),
+                                   .Register_In(inst[12]),
+                                   .Rs_In(read_data1),
+                                   .C(inst[11:9]),
+                                   .Imm(inst[8:0]),
+                                   .Flags(FLAG),
+                                   .current_PC(pc),
+                                   .next_PC(newPC));
 endmodule

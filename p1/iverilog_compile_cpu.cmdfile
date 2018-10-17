@@ -1,0 +1,47 @@
+# This is the command file for Icarus Verilog
+# Compile with `iverilog -Wall -o cpu -c iverilog_compile.cmdfile`
+
+# PC register & instruction memory
+provided/dff.v
+PC_Register.v
+provided/memory_inst.v
+
+# Register File & Flag Register
+register_file/BitCell.v
+register_file/ReadDecoder_4_16.v
+register_file/Register.v
+register_file/RegisterFile_simple.v
+register_file/WriteDecoder_4_16.v
+FlagRegister.v
+
+# ALU
+adder_primitives/adder_1bit_partial.v
+adder_primitives/adder_1bit_cla_unit.v
+adder_primitives/adder_4bit_cla_simple.v
+adder_primitives/adder_8bit_cla_simple.v
+
+alu/addsub_4bit_cla.v
+alu/addsub_16bit_cla.v
+alu/ALU_no_check.v
+alu/ALU.v
+alu/PADDSB_16bit_cla.v
+alu/RED.v
+alu/Shifter.v
+alu/xor_16bit.v
+
+# Other computing units
+SimpleCLA.v
+ByteLoader.v
+MemAddrUnit.v
+
+# Data Memory
+provided/memory_data.v
+
+# PC control & branching control
+pc_control/Check_Branch.v
+pc_control/PC_control_toplevel.v
+pc_control/PC_control.v
+
+# Control Unit & toplevel cpu.v
+ControlUnit.v
+cpu.v
