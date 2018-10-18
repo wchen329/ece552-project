@@ -48,17 +48,17 @@ always@(negedge clock) begin
 	/* Subtractor Values
 	 *
 	 */
-	if(A[3] == neg_B[3] && sub_inter[3] != A[3]) begin
+	if(A[3] == neg_B[3] && sub_inter[3] != A[3] && (!(A == 4'b1000 && B == 4'b1000 && Sub == 1))) begin
 
 		// Case 1, add two positive numbers and saturate at most positive
 		if(A[3] == 0) begin 
-			assign sub_ref = 4'b0111;
+				assign sub_ref = 4'b0111;
 		end
 
 		// Case 2, add two negative numbers and saturate at most negative
 		if(A[3] != 0) begin
 			assign sub_ref = 4'b1000;
-
+	
 		end
 	end
 

@@ -63,7 +63,7 @@ always@(negedge clock) begin
 	/* Subtractor Values
 	 *
 	 */
-	if(A[15] == neg_B[15] && sub_inter[15] != A[15]) begin
+	if(A[15] == neg_B[15] && sub_inter[15] != A[15] &&(!(A == {1'b1, {15{1'b0}}} && B == {1'b1, {15{1'b0}}} && Sub == 1))) begin
 
 		if(Ovfl == 0 && Sub == 1) begin
 			$display("Overflow occurred, but corresponding flag not set");
