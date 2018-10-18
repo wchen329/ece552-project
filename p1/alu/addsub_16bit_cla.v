@@ -16,12 +16,13 @@ module addsub_16bit_cla(Sum, Ovfl, A, B, Sub);
 	wire Cin_operating;
 
 	// Intermediate Sums
-	wire [15:0] Neg_B, B_real, B_operating, Inter_Sum;
-
+	wire [15:0] Neg_B, B_real, B_operating, Inter_Sum, Sum_ovfl_false_check;
+	wire Ovfl_false_check;
 
 	assign B_operating = Sub == 0 ? B : ~B;
 	assign Cin_operating = Sub == 0 ? 0 : 1;
-	
+
+
 	// Add A, B together, calculate operation
 	adder_4bit_cla_simple BLOCK_0 (p[0], g[0], Inter_Sum[3:0], A[3:0], B_operating[3:0], Cin_operating);
 	adder_4bit_cla_simple BLOCK_1 (p[1], g[1], Inter_Sum[7:4], A[7:4], B_operating[7:4], g[0] | (p[0] & Cin_operating));
@@ -38,16 +39,26 @@ module addsub_16bit_cla(Sum, Ovfl, A, B, Sub);
 	assign B_real = Sub == 0? B : Neg_B;
 
 	// Now multiplex output depending on whether saturation occurred or not
-	assign Sum = A[15] == B_real[15] ?
+	assign Sum_ovfl_false_check = A[15] == B_real[15] ?
 			A[15] == Inter_Sum[15] ? Inter_Sum
 			: Inter_Sum[15] == 0 ? 16'b1000000000000000
 				: 16'b0111111111111111
 		: Inter_Sum;
 
+	assign Sum = A == {1'b1, {15{1'b0}}} ?
+		B == {1'b1, {15{1'b0}}} ?
+			Sub == 1 ? 0 : Sum_ovfl_false_check
+		: Sum_ovfl_false_check
+	: Sum_ovfl_false_check;
 	
-	assign Ovfl = A[15] == B_real[15] ?
+	assign Ovfl_false_check = A[15] == B_real[15] ?
 			A[15] == Inter_Sum[15] ? 0 : 1 
 		:0;
 
+	assign Ovfl = A == {1'b1, {15{1'b0}}} ?
+		B == {1'b1, {15{1'b0}}} ?
+			Sub == 1 ? 0 : Ovfl_false_check
+		: Ovfl_false_check
+	: Ovfl_false_check;
 
 endmodule

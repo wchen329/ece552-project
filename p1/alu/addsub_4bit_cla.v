@@ -18,6 +18,7 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 	wire [3:0] neg_B; // -B
 	wire [3:0] Sum_non_sat; // output for no saturation
 	wire [3:0] B_real;
+	wire [3:0] Sum_ovfl_false_check;
 
 	// Find(B - 1), the one's complement of B
 	assign B_1s = ~ B;
@@ -36,10 +37,16 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 	assign B_real = Sub == 0 ? B : neg_B;
 
 	// Now multiplex output depending on whether saturation occurred or not
-	assign Sum = A[3] == B_real[3] ?
+	assign Sum_ovfl_false_check = A[3] == B_real[3] ?
 			A[3] == Sum_non_sat[3] ? Sum_non_sat
 			: Sum_non_sat[3] == 0 ? 4'b1000
 				: 4'b0111
 		: Sum_non_sat;
+
+	assign Sum = A == {1'b1, {3{1'b0}}} ?
+			B == {1'b1, {3{1'b0}}} ?
+				Sub == 1 ? 0 : Sum_ovfl_false_check
+			: Sum_ovfl_false_check
+		: Sum_ovfl_false_check;
 
 endmodule
