@@ -1,3 +1,4 @@
+.PHONY: clean cpu_tb test newcase
 .ONESHELL:
 cpu_tb:
 	cd ..
@@ -13,6 +14,8 @@ test: $(case).bin cpu_tb
 	./cpu_tb
 	cmp dumpfile_data.img src/$(case).ans && echo "Test passed." || echo "Test failed."
 
+newcase:
+	touch src/$(case).{ans,asm,mem}
 
 clean:
 	$(RM) *.bin *.log *.trace *.vcd cpu_tb *.img
