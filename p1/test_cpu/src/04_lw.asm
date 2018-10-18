@@ -1,0 +1,13 @@
+add r0, r0, r0
+llb r1, 0x00
+lhb r1, 0xf0
+
+llb r2, 0x04
+lhb r2, 0xf0
+
+llb r3, 0x55
+lhb r3, 0x55
+sw r3, r1, 1
+lw r4, r2, -1
+sw r4, r0, 0
+hlt

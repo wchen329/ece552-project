@@ -12,7 +12,7 @@ test: $(case).bin cpu_tb
 	ln -s $< loadfile_inst.img
 	ln -s src/$(case).mem loadfile_data.img
 	./cpu_tb
-	cmp dumpfile_data.img src/$(case).ans && echo "Test passed." || echo "Test failed."
+	diff dumpfile_data.img src/$(case).ans && echo "Test passed." || echo "Test failed."
 
 newcase:
 	touch src/$(case).{ans,asm,mem}
