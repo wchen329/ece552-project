@@ -15,10 +15,7 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 	wire [3:0] B_1s; // 1's complement of B
 	wire [3:0] sum_add; // result of A + B
 	wire [3:0] sum_sub; // result of A + (-B)
-	wire [3:0] neg_B; // -B
 	wire [3:0] Sum_non_sat; // output for no saturation
-	wire [3:0] B_real;
-	wire [3:0] Sum_ovfl_false_check;
 
 	// Find(B - 1), the one's complement of B
 	assign B_1s = ~ B;
@@ -26,27 +23,29 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 	// Now evaluate addition and subtraction
 	adder_4bit_cla_simple ADD( , , sum_add, A, B, 1'b0);
 	adder_4bit_cla_simple SUB( , , sum_sub, A, B_1s, 1'b1);
-	
-	// Calculate -B in parallel with the actual sum to be able to evaluate saturation
-	adder_4bit_cla_simple NEGATIVE_B( , , neg_B, 4'b0000, B_1s, 1'b1);
 
 	// Choose non sat output based off of sub flag;
 	assign Sum_non_sat = Sub == 0 ? sum_add : sum_sub;
 
-	// Compare with actual B
-	assign B_real = Sub == 0 ? B : neg_B;
-
 	// Now multiplex output depending on whether saturation occurred or not
-	assign Sum_ovfl_false_check = A[3] == B_real[3] ?
-			A[3] == Sum_non_sat[3] ? Sum_non_sat
-			: Sum_non_sat[3] == 0 ? 4'b1000
-				: 4'b0111
-		: Sum_non_sat;
+	assign Sum =
+		Sub == 0 ?
+		/*	(ADD.msb_cin & ADD.msb_pos_cin) & (A[3] == B[3]) ?
+				Sum_non_sat[3] == 0 ? 4'b1000
+					: 4'b0111
+			: Sum_non_sat*/
+			A[3] == B[3] ?
+				A[3] == Sum_non_sat[3] ? Sum_non_sat
+					: Sum_non_sat[3] == 0 ? 4'b1000
+						: 4'b0111
+			: Sum_non_sat			
+		:
 
-	assign Sum = A == {1'b1, {3{1'b0}}} ?
-			B == {1'b1, {3{1'b0}}} ?
-				Sub == 1 ? 0 : Sum_ovfl_false_check
-			: Sum_ovfl_false_check
-		: Sum_ovfl_false_check;
+			// Sub == 1 case
+			SUB.msb_cin & SUB.msb_cout & (A[3] == B[3]) ?
+				Sum_non_sat[3] == 0 ? 4'b1000
+					: 4'b0111
+			: Sum_non_sat	
+		;
 
 endmodule

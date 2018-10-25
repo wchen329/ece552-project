@@ -14,6 +14,7 @@ module adder_4bit_cla_simple(Propagate, Generate, Sum, A, B, Cin);
 
 	// Propagate and Generate signals
 	wire [3:0] p, g;
+	wire msb_cin, msb_cout, msb_pos_cin;
 
 	adder_1bit_cla_unit SIG_0(p[0], g[0], A[0], B[0]);
 	adder_1bit_cla_unit SIG_1(p[1], g[1], A[1], B[1]);
@@ -31,5 +32,10 @@ module adder_4bit_cla_simple(Propagate, Generate, Sum, A, B, Cin);
 
 	// Calculate Propagate
 	assign Propagate = Generate | ((A[0] | B[0]) & (A[1] | B[1]) & (A[2] | B[2]) & (A[3] | B[3]));
+
+	// Assign Overflow detection flags.
+	assign msb_cin = g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & Cin)))));
+	assign msb_cout = Generate | (Propagate & Cin);
+	assign msb_pos_cin = g[1] | (p[1] & (g[0] | (p[0] & Cin)));
 
 endmodule
