@@ -30,10 +30,6 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 	// Now multiplex output depending on whether saturation occurred or not
 	assign Sum =
 		Sub == 0 ?
-		/*	(ADD.msb_cin & ADD.msb_pos_cin) & (A[3] == B[3]) ?
-				Sum_non_sat[3] == 0 ? 4'b1000
-					: 4'b0111
-			: Sum_non_sat*/
 			A[3] == B[3] ?
 				A[3] == Sum_non_sat[3] ? Sum_non_sat
 					: Sum_non_sat[3] == 0 ? 4'b1000
@@ -41,10 +37,10 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 			: Sum_non_sat			
 		:
 
-			// Sub == 1 case
-			SUB.msb_cin & SUB.msb_cout & (A[3] == B[3]) ?
-				Sum_non_sat[3] == 0 ? 4'b1000
-					: 4'b0111
+			A[3] != B[3] ?
+				A[3] == Sum_non_sat[3] ? Sum_non_sat
+					: Sum_non_sat[3] == 0 ? 4'b1000
+						: 4'b0111
 			: Sum_non_sat	
 		;
 

@@ -58,7 +58,7 @@ always@(negedge clock) begin
 	/* Subtractor Values
 	 * sub_inter > 7 || sub_inter < -8
 	 */
-	if((sub_gt_7[5] == 0 && add_gt_7 != 0 ) || sub_lt_neg_8[5] == 1) begin
+	if((sub_gt_7[5] == 0 && sub_gt_7 != 0 ) || sub_lt_neg_8[5] == 1) begin
 
 		// Case 1, add two positive numbers and saturate at most positive
 		if(A[3] == 0) begin 
