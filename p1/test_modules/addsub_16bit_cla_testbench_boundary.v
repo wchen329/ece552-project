@@ -101,6 +101,28 @@ always@(posedge clock) begin
 		assign B = 16'b1111111111111111;
 		assign Sub = 0'b1;
 	end
+
+	// most positive + most negative == -1 (no saturation)
+	if(count == 13) begin
+		assign A = 16'b0111111111111111;
+		assign B = 16'b1000000000000000;
+		assign Sub = 0'b0;
+	end
+
+	// the "-1" test, add all propagating set to true (no saturation)
+	if(count == 14) begin
+		assign A = 16'b1010101010101010;
+		assign B = 16'b0101010101010101;
+		assign Sub = 0'b0;
+	end
+
+	// the "-2" test, add all generate set to true (no saturation)
+	if(count == 15) begin
+		assign A = 16'b1111111111111111;
+		assign B = 16'b1111111111111111;
+		assign Sub = 0'b0;
+	end
+
 end
 
 // Probe
@@ -189,6 +211,27 @@ always@(negedge clock) begin
 		end
 	end
 
+	if(count == 13) begin
+		if(Sum != 16'b1111111111111111 || Ovfl != 0) begin
+			$display("Error! Test 13 failed!");
+			$stop;
+		end
+	end
+
+	if(count == 14) begin
+		if(Sum != 16'b1111111111111111 || Ovfl != 0) begin
+			$display("Error! Test 14 failed!");
+			$stop;
+		end
+	end
+
+	if(count == 15) begin
+		if(Sum != 16'b1111111111111110 || Ovfl != 0) begin
+			$display("Error! Test 15 failed!");
+			$stop;
+		end
+	end
+
 	assign count = count + 1;
 end
 
@@ -199,7 +242,7 @@ initial begin
 	assign Sub = 0;
 	assign count = 0;
 
-	#5000 begin
+	#1600 begin
 		$display("Test finished. If no errors were printed, then tests passed successfully.");
 		$stop;
 	end
