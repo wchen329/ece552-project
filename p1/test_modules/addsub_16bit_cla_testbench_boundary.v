@@ -66,6 +66,41 @@ always@(posedge clock) begin
 		assign B = 16'b0000000000000001;
 		assign Sub = 0'b0;
 	end
+
+	// Test too big positve + too big positve = 2^15 - 1 (saturation)
+	if(count == 8) begin
+		assign A = 16'b0010000000000000;
+		assign B = 16'b0110000000000000;
+		assign Sub = 0'b0;
+	end
+
+	// Test too big positve + (-1) = too big positive + (-1) (no saturation)
+	if(count == 9) begin
+		assign A = 16'b1111111111111111;
+		assign B = 16'b0100000000000000;
+		assign Sub = 0'b0;
+	end
+
+	// 0 - 0 == 0 (no saturation)
+	if(count == 10) begin
+		assign A = 16'b0000000000000000;
+		assign B = 16'b0000000000000000;
+		assign Sub = 0'b1;
+	end
+
+	// sanity check, is -1 - 1 == -2
+	if(count == 11) begin
+		assign A = 16'b1111111111111111;
+		assign B = 16'b0000000000000001;
+		assign Sub = 0'b1;
+	end
+
+	// most positive number - (-1) == most positive number (saturation)
+	if(count == 12) begin
+		assign A = 16'b0111111111111111;
+		assign B = 16'b1111111111111111;
+		assign Sub = 0'b1;
+	end
 end
 
 // Probe
@@ -115,6 +150,41 @@ always@(negedge clock) begin
 	if(count == 7) begin
 		if(Sum != 16'b0111111111111111 || Ovfl != 0) begin
 			$display("Error! Test 7 failed!");
+			$stop;
+		end
+	end
+
+	if(count == 8) begin
+		if(Sum != 16'b0111111111111111 || Ovfl != 1) begin
+			$display("Error! Test 8 failed!");
+			$stop;
+		end
+	end
+
+	if(count == 9) begin
+		if(Sum != 16'b0011111111111111 || Ovfl != 0) begin
+			$display("Error! Test 9 failed!");
+			$stop;
+		end
+	end
+
+	if(count == 10) begin
+		if(Sum != 16'b0000000000000000 || Ovfl != 0) begin
+			$display("Error! Test 10 failed!");
+			$stop;
+		end
+	end
+
+	if(count == 11) begin
+		if(Sum != 16'b1111111111111110 || Ovfl != 0) begin
+			$display("Error! Test 11 failed!");
+			$stop;
+		end
+	end
+
+	if(count == 12) begin
+		if(Sum != 16'b0111111111111111 || Ovfl != 1) begin
+			$display("Error! Test 12 failed!");
 			$stop;
 		end
 	end
