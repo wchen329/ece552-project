@@ -5,7 +5,9 @@
  */
 module addsub_16bit_cla_testbench_random();
 
-	reg [15:0] A, B, sub_ref, add_ref, sub_inter, add_inter, neg_B;
+	reg [15:0] A, B;
+	reg [17:0] sub_ref, add_ref, sub_inter, add_inter, A_ext, B_ext, Sum_sign_ext,
+			add_gt_max, add_lt_min, sub_gt_max, sub_lt_min; 
 	reg clock, Sub;
 	wire [15:0] Sum;
 	wire Ovfl;
@@ -22,16 +24,24 @@ end
 
 // Probe
 always@(negedge clock) begin
-	assign sub_inter = A - B;
-	assign add_inter = A + B;
-	assign neg_B = -B;
+	assign A_ext = { {2{A[15]}}, A};
+	assign B_ext = { {2{B[15]}}, B};
+	assign Sum_sign_ext = { {2{Sum[15]}}, Sum};
+	assign sub_inter = A_ext - B_ext;
+	assign add_inter = A_ext + B_ext;
+
+	// Comparison values
+	assign add_gt_max = add_inter - 18'b000111111111111111; 
+	assign add_lt_min = add_inter - 18'b111000000000000000;
+	assign sub_gt_max = sub_inter - 18'b000111111111111111;
+	assign sub_lt_min = sub_inter - 18'b111000000000000000;
 
 	// Construct correct values
 
 	/* Adder Values
 	 *
 	 */
-	if(A[15] == B[15] && add_inter[15] != A[15]) begin
+	if((add_gt_max[17] == 0 && add_gt_max != 0) || add_lt_min[17] == 1) begin
 
 		// Check for Overflow flag being set
 		if(Ovfl == 0 && Sub == 0) begin
@@ -41,12 +51,12 @@ always@(negedge clock) begin
 
 		// Case 1, add two positive numbers and saturate at most positive
 		if(A[15] == 0) begin 
-			assign add_ref = 16'b0111111111111111;
+			assign add_ref = 18'b000111111111111111;
 		end
 
 		// Case 2, add two negative numbers and saturate at most negative
 		if(A[15] != 0) begin
-			assign add_ref = 16'b1000000000000000;
+			assign add_ref = 18'b111000000000000000;
 		end
 	end
 
@@ -63,7 +73,7 @@ always@(negedge clock) begin
 	/* Subtractor Values
 	 *
 	 */
-	if(A[15] == neg_B[15] && sub_inter[15] != A[15] &&(!(A == {1'b1, {15{1'b0}}} && B == {1'b1, {15{1'b0}}} && Sub == 1))) begin
+	if((sub_gt_max[17] == 0 && sub_gt_max != 0) || sub_lt_min[17] == 1) begin
 
 		if(Ovfl == 0 && Sub == 1) begin
 			$display("Overflow occurred, but corresponding flag not set");
@@ -72,12 +82,12 @@ always@(negedge clock) begin
 
 		// Case 1, add two positive numbers and saturate at most positive
 		if(A[15] == 0) begin 
-			assign sub_ref = 16'b0111111111111111;
+			assign sub_ref = 18'b000111111111111111;
 		end
 
 		// Case 2, add two negative numbers and saturate at most negative
 		if(A[15] != 0) begin
-			assign sub_ref = 16'b1000000000000000;
+			assign sub_ref = 18'b111000000000000000;
 
 		end
 	end
@@ -93,14 +103,14 @@ always@(negedge clock) begin
 
 	// Probe
 	if(Sub != 0) begin
-		if(sub_ref != Sum) begin
+		if(sub_ref != Sum_sign_ext) begin
 			$display("An error has occurred, subtraction mismatch");
 			$stop;
 		end
 	end
 
 	else begin
-		if(add_ref != Sum) begin
+		if(add_ref != Sum_sign_ext) begin
 			$display("An error has occurred, addition mismatch");
 			$stop;
 		end
@@ -116,7 +126,6 @@ initial begin
 	assign add_ref = 0;
 	assign sub_inter = 0;
 	assign add_inter = 0;
-	assign neg_B = 0;
 
 	#2000000 begin
 		$display("Test finished. If no errors were printed, then tests passed successfully.");
