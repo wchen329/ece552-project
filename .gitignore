@@ -12,3 +12,4 @@ p1_stage/*.v
 _info
 _vmake
 *.mpf
+testing/reports

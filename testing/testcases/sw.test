@@ -1,0 +1,8 @@
+lhb r1, 0
+llb r1, 0x42
+sw r1, r0, 0
+hlt
+//%% mem_in
+%% expected_mem_out
+0000: 0042
+=== DUMP ENDS ===

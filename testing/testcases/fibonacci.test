@@ -1,0 +1,37 @@
+# compute fib(n).
+#  fib(0) = 1
+#  fib(1) = 1
+#  fib(2) = 2
+#  etc...
+# read from M[0x0000]
+# result in M[0x0002]
+
+lw R5, R0, 0
+add R1, R0, R0
+add R2, R0, R0
+add R3, R0, R0
+llb R3, 1
+llb r6, 0xFF
+lhb r6, 0xFF # r6 := -1
+
+L1:
+sub R0, R5, R0
+b 010, L2
+b 111, L3
+L2:
+add r4, r3, r2
+add r2, r3, r0
+add r3, r4, r0
+add r5, r5, r6
+b 111, L1
+
+L3:
+sw r3, r0, 1
+hlt
+%% mem_in
+@0
+000A
+%% expected_mem_out
+0000: 000a
+0002: 0059
+=== DUMP ENDS ===
