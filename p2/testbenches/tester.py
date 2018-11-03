@@ -45,7 +45,7 @@ def run_testbench(tbname: str):
 
 def main(argc, argv):
     if argc < 2:
-        print("./tester.py <list|all|{tbName}>")
+        print("./tester.py <list|all|{tbName}|{filenameSuffix.v}>")
     elif argv[1] == 'list':
         for k, v in list_testbenches().items():
             if len(v) > 0:
@@ -58,10 +58,20 @@ def main(argc, argv):
             run_testbench(tbname)
     else:
         tbname = argv[1]
-        if tbname not in list_testbenches_set():
-            print("No such testbench called", tbname)
+        if tbname[-2:] == '.v':
+            tb_exists = False
+            for k, v in list_testbenches().items():
+                if k[-len(tbname):] == tbname and len(v) > 0:
+                    for tb in v:
+                        tb_exists = True
+                        run_testbench(tb)
+            if not tb_exists:
+                print("No such testbench file or file does not contain any testbenches")
         else:
-            run_testbench(tbname)
+            if tbname not in list_testbenches_set():
+                print("No such testbench called", tbname)
+            else:
+                run_testbench(tbname)
 
 if __name__ == '__main__':
     main(len(sys.argv), sys.argv)
