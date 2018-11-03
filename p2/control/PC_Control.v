@@ -21,25 +21,27 @@ endmodule
 
 module PC_Control(opcode, condition, flagZVN, offset, target_reg, PC_in, taken, PC_out);
     // module by Zhenghao
-    input [3:0] opcode;
-    input [2:0] condition; // used only if opcode is B or BR
-    input [2:0] flagZVN; // from FLAG register {Z,V,N}
-    input [8:0] offset; // used only if is opcode is B
+    input [3:0] opcode;      // inst[15:12]
+    input [2:0] condition;   // used only if opcode is B or BR
+    input [2:0] flagZVN;     // from FLAG register {Z,V,N}
+    input [8:0] offset;      // used only if opcode is B
     input [15:0] target_reg; // used only if opcode id BR
     input [15:0] PC_in;
-    output taken; // meaningful only if opcode is B or BR
-    output[15:0] PC_out; // PC_in+2 if not taken else branch_target
+    output taken;            // meaningful only if opcode is B or BR, otherwise set to 0
+    output[15:0] PC_out;     // PC_in+2 if not branch or not taken else branch_target
 
     wire [15:0] target_plus2, target_offset;
+    wire _taken;
 
-    NeedBranch nb0(.C(condition), .F(flagZVN), .Branch(taken));
+    NeedBranch nb0(.C(condition), .F(flagZVN), .Branch(_taken));
     CLAdder16 add0(.A(PC_in), .B(16'h0002), .Sum(target_plus2));
     CLAdder16 add1(.A(target_plus2),
                    .B({ {6{offset[8]}} , offset , 1'b0 }),
                    .Sum(target_offset));
 
+    assign taken  = opcode[3:1] != 3'b110 ? 1'b0 : _taken ;
     assign PC_out = opcode[3:1] != 3'b110 ? target_plus2  :
-                    taken == 1'b0         ? target_plus2  :
+                    _taken == 1'b0        ? target_plus2  :
                     opcode[0] == 1'b0     ? target_offset :
                                             target_reg    ;
 endmodule

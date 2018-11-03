@@ -146,17 +146,17 @@ module PC_Control_tb();
                     signedPC = signedPC + signedOffset + $signed(2);
 
                     if (should_branch(condition, flag))
-                        ok = ok & (pcOut == signedPC[15:0]);
+                        ok = ok & (pcOut == signedPC[15:0]) & (taken == 1'b1);
                     else
-                        ok = ok & (pcOut == pcIn_plus2);
+                        ok = ok & (pcOut == pcIn_plus2) & (taken == 1'b0);
 
                 end else if (opcode == 4'b1101) begin
                     if (should_branch(condition, flag))
-                        ok = ok & (pcOut == br_reg);
+                        ok = ok & (pcOut == br_reg) & (taken == 1'b1);
                     else
-                        ok = ok & (pcOut == pcIn_plus2);
+                        ok = ok & (pcOut == pcIn_plus2) & (taken == 1'b0);
                 end else begin
-                    ok = ok & (pcOut == pcIn_plus2);
+                    ok = ok & (pcOut == pcIn_plus2) & (taken == 1'b0);
                 end
                 if (~ok) $display("Assert fail: opcode=%d, condition=%d, flag=%d, offset=%d, br_reg=%d, pcIn=%d, taken=%d, pcOut=%d, pcIn_plus2=%d, offset=%d, signedOffset=%d, signedPC=%d",
                                                 opcode,    condition,    flag,    offset,    br_reg,    pcIn,    taken,    pcOut,    pcIn_plus2,    offset,    signedOffset,    signedPC);
