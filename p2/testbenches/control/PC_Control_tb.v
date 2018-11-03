@@ -1,4 +1,5 @@
 module NeedBranch_tb();
+    // testbench adapted from Zhenghao's code
     reg[2:0] C,F;
     wire need_branch;
     reg ans;
@@ -30,6 +31,51 @@ module NeedBranch_tb();
             {C,F} = x[5:0];
             #1;
             ans = should_branch(C, F);
+            if (ans != need_branch) $display("Test fail: C=%d, F=%d, got=%d, expected=%d", C, F, need_branch, ans);
+        end
+        $display("Test complete");
+        $finish;
+    end
+endmodule
+
+module NeedBranch_2nd_tb();
+    // testbench adapted from Winor's code
+    reg[2:0] C,F;
+    wire need_branch;
+    reg ans;
+    reg [31:0] x;
+    wire Zf, Vf, Nf;
+
+    NeedBranch DUT(.C(C), .F(F), .Branch(need_branch));
+    assign {Zf, Vf, Nf} = F[2:0];
+
+    initial begin
+        for (x=0; x<32'h80; x=x+1) begin
+            {C,F} = x[5:0];
+            #1;
+            ans =
+                C == 0 ?
+                    Zf == 0 ? 1 : 0
+                    :	// Not Equal
+                C == 1 ?
+                    Zf == 1 ? 1 : 0
+                    :	// Equal
+                C == 2 ?
+                    Zf == 0 ? Nf == 0 ? 1 : 0 : 0
+                    :	// Greater Than
+                C == 3 ?
+                    Nf == 1 ? 1 : 0
+                    :	// Less Than
+                C == 4 ?
+                    Zf == 1 ? 1 : Zf == 0 ? Nf == 0 ? 1 : 0 : 0
+                    :	// Greater Than or Equal
+                C == 5 ?
+                    Nf == 1 ? 1 : Zf == 1 ? 1 : 0
+                    :	// Less Than or Equal
+                C == 6 ?
+                    Vf == 1 ? 1 : 0
+                    :	// Overflow
+                C == 7 ? 1 : 0;	// Unconditional
             if (ans != need_branch) $display("Test fail: C=%d, F=%d, got=%d, expected=%d", C, F, need_branch, ans);
         end
         $display("Test complete");
