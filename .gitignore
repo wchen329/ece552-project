@@ -7,6 +7,7 @@
 *.vcd
 *.trace
 *.img
+*.class
 transcript
 p1_stage/*.v
 _info

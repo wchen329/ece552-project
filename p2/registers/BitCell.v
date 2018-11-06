@@ -12,7 +12,7 @@ module BitCell(input clk, input rst, input D, input WriteEnable, input ReadEnabl
 	dff STATE_ELEMENT(dff_out, D, WriteEnable, clk, rst);
 	
 	// Assign read signals
-	assign Bitline1 = ReadEnable1 == 0 ? 'z : dff_out;
-	assign Bitline2 = ReadEnable2 == 0 ? 'z : dff_out;
+	assign Bitline1 = ReadEnable1 == 0 ? 1'bz : dff_out;
+	assign Bitline2 = ReadEnable2 == 0 ? 1'bz : dff_out;
 
 endmodule
