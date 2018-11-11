@@ -1,3 +1,5 @@
+// CLA by Zhenghao Gu
+
 module CLABit(a, b, cin, p, g, s);
     input a, b, cin;
     output p, g, s;
