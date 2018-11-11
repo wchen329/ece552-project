@@ -8,4 +8,5 @@ CPU for WISC-F18 ISA, with five stage pipeline.
 - `registers` RegisterFile, FlagRegister and PipelineRegister.
 - `control` all control units: ControlUnit, PCControl, DataHazard, ControlHazard etc. Purely combinational.
 - `testbenches` all testbenches for modules.
+- `manual-dbg` testbenches which all for manual debugging of certain modules
 - `cpu.v` top-level data path. Wires everything together.
