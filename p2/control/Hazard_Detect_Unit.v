@@ -13,7 +13,7 @@ module Hazard_Detect_Unit(	BranchRegister_IF_ID, Branch_IF_ID,
 	// INPUTS
 	input [3:0] RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterBl_1_EX_MEM, RegisterBl_2_EX_MEM, RegisterDst_ID_EX, RegisterDst_EX_MEM, RegisterDst_MEM_WB, BranchRegister_IF_ID; // Register number corresponding to port label
 	input 
-		Branch_IF_ID;
+		Branch_IF_ID,
 		MemRead_ID_EX,
 		RegWrite_ID_EX,
 		MemRead_EX_MEM,
@@ -93,7 +93,7 @@ module Hazard_Detect_Unit(	BranchRegister_IF_ID, Branch_IF_ID,
 				Branch_IF_ID == 1 ?
 					RegisterDst_EX_MEM != 0 ? 1 : 0
 				: 0
-			: 0
+			: 0;
 
 	// Load to use Hazard Detection for LOAD to USE, insert STALL.
 	assign BRANCH_REG_LOAD_TO_USE = BranchRegister_IF_ID == RegisterDst_EX_MEM ?
@@ -127,11 +127,11 @@ module Hazard_Detect_Unit(	BranchRegister_IF_ID, Branch_IF_ID,
 	// STALL - An ALU load to use also stalls a pipeline sufficiently for control hazards
 	assign no_op =
 		( |ALU_LOAD_TO_USE == 1) ? 4'b0010 : // ALU load to use- insert no-op at MEM stage.
-		( BRANCH_REG_LOAD_TO_USE == 1 ) 4'b0010:
+		( BRANCH_REG_LOAD_TO_USE == 1 ) ? 4'b0010:
 		( BRANCH_ARITH_OR_LOAD_TO_USE == 1) ? 4'b0100 : 0;
 	assign hold =
 		( |ALU_LOAD_TO_USE == 1) ? 4'b1100 :
-		( BRANCH_REG_LOAD_TO_USE == 1 ) 4'b1100:
+		( BRANCH_REG_LOAD_TO_USE == 1 ) ? 4'b1100:
 		( BRANCH_ARITH_OR_LOAD_TO_USE == 1) ? 4'b1000 : 0;
 
 endmodule
