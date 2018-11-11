@@ -22,7 +22,7 @@ module Hazard_Detect_Unit(	RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterDst_I
 			    // no_op[1] - corresponds to ID/EX
 			    // no_op[2] - corresponds to EX/MEM
 			    // no_op[3] - corresponds to MEM/WB
-	output [3:0] hold;  // hold signal, for when no ops are inserted in the middle of the pipeline, tell instructions upstream to "hold"
+	output [3:0] hold;  // hold signal, for when no ops are inserted in the middle of the pipeline, tell instructions downstream to "hold"
 			    // hold[0] - corresponds to IF/ID AND the PC
 			    // hold[1] - corresponds to ID/EX
 			    // hold[2] - corresponds to EX/MEM
