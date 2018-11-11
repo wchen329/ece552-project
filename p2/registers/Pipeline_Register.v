@@ -5,12 +5,12 @@
  *
  * wchen329@wisc.edu
  */
-module Pipeline_Register(clk, rst, WE_n, ALU_Op_next, ALU_Src_next, Reg_Write_next, Mem_Read_next, Mem_Write_next, Opcode, register_bl_1_next, register_bl_2_next, result_next,	// next state
+module Pipeline_Register(clk, rst, WE, ALU_Op_next, ALU_Src_next, Reg_Write_next, Mem_Read_next, Mem_Write_next, Opcode, register_bl_1_next, register_bl_2_next, result_next,	// next state
 				ALU_Op, ALU_Src, Reg_Write, Mem_Read, Mem_Write, Opcode_next, register_bl_1, register_bl_2, result);						// current state 
 
 	// Inputs
 	input clk; // Clock signal of the processor
-	input WE_n; // Write Enable the register, reset has precedence, active low 
+	input WE; // Write Enable the register, reset has precedence, active high
 	input rst; // input active high reset signal, asserting basically inserts a no-op at the current stage
 	input [2:0] ALU_Op_next; // ALU Opcode
 	input Reg_Write_next, ALU_Src_next; // Writing to register file control signals 
@@ -24,10 +24,6 @@ module Pipeline_Register(clk, rst, WE_n, ALU_Op_next, ALU_Src_next, Reg_Write_ne
 	output Mem_Read, Mem_Write;
 	output [5:0] Opcode;
 	output [15:0] register_bl_1, register_bl_2, result;
-
-	wire WE;
-
-	assign WE = ~WE_n;
 
 	// 1 bit signals
 	BitCell REG_WRITE (.clk(clk), .rst(rst), .D(Reg_Write_next), .WriteEnable(WE), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(Reg_Write));
