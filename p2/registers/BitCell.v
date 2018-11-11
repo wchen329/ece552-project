@@ -1,6 +1,6 @@
 /* A bit-cell.
- *
- * wchen329@wisc.edu
+ * 
+ * wchen329@wisc.edu 
  */
 module BitCell(input clk, input rst, input D, input WriteEnable, input ReadEnable1, ReadEnable2, inout Bitline1, inout Bitline2);
 
@@ -10,7 +10,7 @@ module BitCell(input clk, input rst, input D, input WriteEnable, input ReadEnabl
 	wire dff_out;
 	wire dff_write_en;
 	dff STATE_ELEMENT(dff_out, D, WriteEnable, clk, rst);
-
+	
 	// Assign read signals
 	assign Bitline1 = ReadEnable1 == 0 ? 1'bz : dff_out;
 	assign Bitline2 = ReadEnable2 == 0 ? 1'bz : dff_out;
