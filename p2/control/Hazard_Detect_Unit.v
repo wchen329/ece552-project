@@ -3,13 +3,16 @@
  *
  * wchen329@wisc.edu
  */
-module Hazard_Detect_Unit(	RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterDst_ID_EX, MemRead_ID_EX, RegWrite_ID_EX,
+module Hazard_Detect_Unit(	BranchRegister_IF_ID, Branch_IF_ID, 
+				RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterDst_ID_EX, MemRead_ID_EX, RegWrite_ID_EX,
 				RegisterBl_1_EX_MEM, RegisterBl_2_EX_MEM, RegisterDst_EX_MEM, MemRead_EX_MEM, MemWrite_EX_MEM, RegWrite_EX_MEM,
 				RegisterDst_MEM_WB, RegWrite_MEM_WB,
 				no_op, hold, EX_EX_FW, MEM_EX_FW, EX_ID_FW, MEM_MEM_FW);
 	// INPUTS
-	input [3:0] RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterBl_1_EX_MEM, RegisterBl_2_EX_MEM, RegisterDst_ID_EX, RegisterDst_EX_MEM, RegisterDst_MEM_WB; // Register number corresponding to port label
-	input MemRead_ID_EX,
+	input [3:0] RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterBl_1_EX_MEM, RegisterBl_2_EX_MEM, RegisterDst_ID_EX, RegisterDst_EX_MEM, RegisterDst_MEM_WB, BranchRegister_IF_ID; // Register number corresponding to port label
+	input 
+		Branch_IF_ID;
+		MemRead_ID_EX,
 		RegWrite_ID_EX,
 		MemRead_EX_MEM,
 		MemWrite_EX_MEM,
@@ -33,8 +36,8 @@ module Hazard_Detect_Unit(	RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterDst_I
 	output [1:0] EX_ID_FW;   // true if EX-ID forwarding is going to occur, bit 0 is forwarding_flag for ALU arg (1), and bit 2 is forwarding flag for ALU arg (2)
 	output MEM_MEM_FW;	 // true if MEM-MEM forwarding is going to occur, assumption that bit line 2 is used as the source register for a store.
 
-	wire [1:0] ALU_LOAD_TO_USE;	// load to use for an arithmetic operation, insert stall at EX/MEM, stall everything downstream
-	wire BRANCH_LOAD_TO_USE_; 
+	wire [1:0] ALU_LOAD_TO_USE;	// load to use for an arithmetic operation, insert stall at EX/MEM, stall everything upstream
+	wire BRANCH_ARITH_OR_LOAD_TO_USE;	// load to use or arithmetic to use to a branch operation, insert a stall at ID/EX, stall everything upstream
 	
 	// Set EX_EX_FW to ALU input 1
 	assign EX_EX_FW[0] = RegisterDst_EX_MEM == RegisterBl_1_ID_EX ?
@@ -85,7 +88,6 @@ module Hazard_Detect_Unit(	RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterDst_I
 
 
 	//  Load to Use Hazard Detection for ALU, insert STALL.
-
 	assign ALU_LOAD_TO_USE[0] = RegisterDst_EX_MEM == RegisterBl_1_ID_EX ?
 			RegisterDst_EX_MEM != 0 ?
 				RegWrite_EX_MEM == 1 ?
@@ -104,10 +106,16 @@ module Hazard_Detect_Unit(	RegisterBl_1_ID_EX, RegisterBl_2_ID_EX, RegisterDst_I
 			: 0
 		: 0;
 
-	// STALL?
+	// Branch Hazard 
+	assign BRANCH_ARITH_OR_LOAD_TO_USE = Branch_IF_ID == 1 ? 1 : 0;
+	// assume that all preceding instructions modify the flag register, mentioned in lecture
+
+	// STALL - An ALU load to use also stalls a pipeline sufficiently for control hazards
 	assign no_op =
-		( |ALU_LOAD_TO_USE == 1) ? 4'b0010 : 0;
+		( |ALU_LOAD_TO_USE == 1) ? 4'b0010 : // ALU load to use- insert no-op at MEM stage.
+		( |BRANCH_ARITH_OR_LOAD_TO_USE == 1) ? 4'b0100 : 0;
 	assign hold =
-		( |ALU_LOAD_TO_USE == 1) ? 4'b1100 : 0;
+		( |ALU_LOAD_TO_USE == 1) ? 4'b1100
+		( |BRANCH_ARITH_OR_LOAD_TO_USE == 1) ? 4'b1000 : 0;
 
 endmodule
