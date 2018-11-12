@@ -5,8 +5,8 @@
  *
  * wchen329@wisc.edu
  */
-module Pipeline_Register(clk, rst, WE, ALU_Op_next, ALU_Src_next, Reg_Write_next, Mem_Read_next, Mem_Write_next, Opcode, register_bl_1_next, register_bl_2_next, result_next,	// next state
-				ALU_Op, ALU_Src, Reg_Write, Mem_Read, Mem_Write, Opcode_next, register_bl_1, register_bl_2, result);						// current state 
+module Pipeline_Register(clk, rst, WE, ALU_Op_next, ALU_Src_next, Reg_Write_next, Mem_Read_next, Mem_Write_next, Opcode, register_bl_1_next, register_bl_2_next, result_next, register_1_num_next, register_2_num_next, result_num_next,	// next state
+				ALU_Op, ALU_Src, Reg_Write, Mem_Read, Mem_Write, Opcode_next, register_bl_1, register_bl_2, result, register_1_num, register_2_num, result_num);						// current state 
 
 	// Inputs
 	input clk; // Clock signal of the processor
@@ -16,6 +16,7 @@ module Pipeline_Register(clk, rst, WE, ALU_Op_next, ALU_Src_next, Reg_Write_next
 	input Reg_Write_next, ALU_Src_next; // Writing to register file control signals 
 	input Mem_Read_next, Mem_Write_next; // Memory control signals 
 	input [5:0] Opcode_next; // full opcode
+	input [3:0] register_1_num_next, register_2_num_next, result_num_next; // Register numbers associated with the first and second bitlines and the result register, respectively
 	input [15:0] register_bl_1_next, register_bl_2_next, result_next; // Bitlines retrieved during decode stage, result is the "free" intermediate register 
 
 	// Outputs
@@ -23,6 +24,7 @@ module Pipeline_Register(clk, rst, WE, ALU_Op_next, ALU_Src_next, Reg_Write_next
 	output Reg_Write, ALU_Src;
 	output Mem_Read, Mem_Write;
 	output [5:0] Opcode;
+	output [3:0] register_1_num, register_2_num, result_num;
 	output [15:0] register_bl_1, register_bl_2, result;
 
 	// 1 bit signals
@@ -34,6 +36,11 @@ module Pipeline_Register(clk, rst, WE, ALU_Op_next, ALU_Src_next, Reg_Write_next
 	// 3 bit signal
 	Register_3bit ALU_OP(.clk(clk), .rst(rst), .D(ALU_Op_next), .WriteReg(WE), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(ALU_Op));
 	
+	// 4 bit signal
+	Register_4bit BL_1_NUM(.clk(clk), .rst(rst), .D(register_1_num_next), .WriteReg(WE), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(register_1_num));
+	Register_4bit BL_2_NUM(.clk(clk), .rst(rst), .D(register_2_num_next), .WriteReg(WE), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(register_2_num));
+	Register_4bit BL_RES_NUM(.clk(clk), .rst(rst), .D(result_num_next), .WriteReg(WE), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(result_num));
+
 	// 6 bit signal	
 	Register_6bit OPCODE(.clk(clk), .rst(rst), .D(Opcode_next), .WriteReg(WE), .ReadEnable1(1), .ReadEnable2(0), .Bitline1(Opcode));
 
