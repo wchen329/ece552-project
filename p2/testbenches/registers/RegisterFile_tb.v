@@ -1,11 +1,11 @@
-module RegisterFile_simple_tb();
+module RegisterFile_tb();
     reg clk;
     reg rst;
     reg [3:0] SrcReg1, SrcReg2, DstReg;
     reg WriteReg;
     reg [15:0] DstData;
     wire [15:0] SrcData1, SrcData2;
-    RegisterFile_simple DUT(clk, rst, SrcReg1, SrcReg2, DstReg, WriteReg, DstData, SrcData1, SrcData2);
+    RegisterFile DUT(clk, rst, SrcReg1, SrcReg2, DstReg, WriteReg, DstData, SrcData1, SrcData2);
 
     reg signed [31:0] i;
     reg [31:0] tmp;
