@@ -27,9 +27,25 @@ module cpu_tb();
 
 
 
-   cpu DUT(.clk(clk), .rst_n(rst_n), .pc_out(PC), .hlt(Halt)); /* Instantiate your processor */
+   cpu DUT(.clk(clk), .rst_n(rst_n), .pc(PC), .hlt(Halt)); /* Instantiate your processor */
 
-
+   task dumpMemory;
+   reg[63:0] i;
+   reg[15:0] d,adr;
+   integer mem_file;
+   begin
+       mem_file = $fopen("dumpfile_data.img");
+       for (i=0; i < 2**15;i=i+1) begin
+           d = DUT.dataMemory.mem[i];
+           adr = i << 1;
+           if (d != 0) begin
+               $fdisplay(mem_file, "%h: %h", adr, d);
+           end
+       end
+       $fdisplay(mem_file, "=== DUMP ENDS ===");
+       $fclose(mem_file);
+   end
+   endtask
 
 
 
@@ -40,8 +56,8 @@ module cpu_tb();
       $display("Hello world...simulation starting");
       $display("See verilogsim.plog and verilogsim.ptrace for output");
       inst_count = 0;
-      trace_file = $fopen("verilogsim.ptrace");
-      sim_log_file = $fopen("verilogsim.plog");
+      trace_file = $fopen("verilogsim.trace");
+      sim_log_file = $fopen("verilogsim.log");
 
    end
 
@@ -114,11 +130,12 @@ module cpu_tb();
          end
          if (Halt) begin
             $fdisplay(sim_log_file, "SIMLOG:: Processor halted\n");
-            $fdisplay(sim_log_file, "SIMLOG:: sim_cycles %d\n", DUT.c0.cycle_count);
+            $fdisplay(sim_log_file, "SIMLOG:: sim_cycles %d\n", cycle_count);
             $fdisplay(sim_log_file, "SIMLOG:: inst_count %d\n", inst_count);
 
             $fclose(trace_file);
             $fclose(sim_log_file);
+            dumpMemory();
 	    #5;
             $finish;
          end
@@ -138,31 +155,31 @@ module cpu_tb();
    // Is processor halted (1 bit signal)
 
 
-   assign Inst = DUT.p0.instr;
+   assign Inst = DUT.if_inst;
    //Instruction fetched in the current cycle
 
-   assign RegWrite = DUT.p0.regWrite;
+   assign RegWrite = DUT.wb_RFwe;
    // Is register file being written to in this cycle, one bit signal (1 means yes, 0 means no)
 
-   assign WriteRegister = DUT.p0.DstwithJmout;
+   assign WriteRegister = DUT.wb_RFdst;
    // If above is true, this should hold the name of the register being written to. (4 bit signal)
 
-   assign WriteData = DUT.p0.wData;
+   assign WriteData = DUT.wb_RFwriteData;
    // If above is true, this should hold the Data being written to the register. (16 bits)
 
-   assign MemRead =  (DUT.p0.memRxout & ~DUT.p0.notdonem);
+   assign MemRead = DUT.mem_inst[15:12]==4'b1000;
    // Is memory being read from, in this cycle. one bit signal (1 means yes, 0 means no)
 
-   assign MemWrite = (DUT.p0.memWxout & ~DUT.p0.notdonem);
+   assign MemWrite = DUT.mem_DataWe;
    // Is memory being written to, in this cycle (1 bit signal)
 
-   assign MemAddress = DUT.p0.data1out;
+   assign MemAddress = DUT.mem_DataAddr;
    // If there's a memory access this cycle, this should hold the address to access memory with (for both reads and writes to memory, 16 bits)
 
-   assign MemDataIn = DUT.p0.data2out;
+   assign MemDataIn = DUT.mem_DataWriteData;
    // If there's a memory write in this cycle, this is the Data being written to memory (16 bits)
 
-   assign MemDataOut = DUT.p0.readData;
+   assign MemDataOut = DUT.mem_DataReadData;
    // If there's a memory read in this cycle, this is the data being read out of memory (16 bits)
 
 
