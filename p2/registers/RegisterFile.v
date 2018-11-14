@@ -41,12 +41,12 @@ module RegisterFile(input clk, input rst, input [3:0] SrcReg1, input[3:0] SrcReg
 			DstReg == SrcReg1 ?
 				WriteReg ? DstData
 				: read_bus_1
-			: DstReg == 0 ? 0 : read_bus_1;
+			: read_bus_1;
 	assign SrcData2 = SrcReg2 == 0 ? 0 :
 			rst != 0 ? 0 :
 			DstReg == SrcReg2 ?
 				WriteReg ? DstData
 				: read_bus_2
-			: DstReg == 0 ? 0 : read_bus_2;
+			: read_bus_2;
 
 endmodule
