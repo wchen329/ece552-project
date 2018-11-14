@@ -69,7 +69,7 @@ module cpu(clk, rst_n, hlt, pc);
 
     ForwardToBranchRegister forwardBr(.brSrcSel(id_brForwardSel), .brSrc(id_RFsrc1), .aluDst(ex_RFdst), .exDst(mem_RFdst), .willAluWrite(ex_RFwe), .willExWrite(mem_RFwe));
     assign id_forwardedBranchRegisterTarget = id_brForwardSel==2'b01 ? ex_resultToPR :
-                                              id_brForwardSel==2'b10 ? mem_AluResult : id_RFout1 ;
+                                              id_brForwardSel==2'b10 ? mem_DataToBeWrittenToPR : id_RFout1 ;
 
     assign id_aluSrc1 = id_ALU1Src==1'b0 ? id_RFsrc1 : id_RFsrc2;
     assign id_aluSrc2 = id_ALU2Src==1'b0 ? id_RFsrc2 : 4'b0000;
