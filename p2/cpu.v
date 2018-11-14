@@ -4,8 +4,6 @@ module cpu(clk, rst_n, hlt, pc);
     output[15:0] pc;
 
     wire rst;
-    assign rst = ~rst_n;
-    assign hlt = wb_hlt;
 
     // all decl
     wire flush, taken, stall, pc_we;
@@ -46,6 +44,9 @@ module cpu(clk, rst_n, hlt, pc);
     wire[3:0] wb_RFdst;
     wire[15:0] wb_RFwriteData;
     wire[2:0] wb_flag, wb_flagwe;
+
+    assign rst = ~rst_n;
+    assign hlt = wb_hlt;
 
     // IF stage
     assign flush = taken;
