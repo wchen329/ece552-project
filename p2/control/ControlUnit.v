@@ -11,7 +11,7 @@ module ControlUnit(opcode, HLT, PCwe, RFwe, MemWE, FLAGwe, NeedBranch, ALU2Src, 
     assign FLAGwe = (opcode[3:1]==3'b000) ? 3'b111 :
                     (opcode==4'b0010) | (opcode==4'b0100) | (opcode==4'b0101) | (opcode==4'b0110) ? 3'b100 : 3'b000;
     assign NeedBranch = opcode[3:1] == 3'b110;
-    assign ALU2Src = (opcode==4'b0100) | (opcode==4'b0101) | (opcode==4'b0110);
+    assign ALU2Src = (opcode==4'b0100) | (opcode==4'b0101) | (opcode==4'b0110) | (opcode[3:2]==2'b10);
     assign A2Src = opcode[3];
     assign DwMUX = (opcode==4'b1000) ? 2'b01 :
                    (opcode==4'b1110) ? 2'b11 :

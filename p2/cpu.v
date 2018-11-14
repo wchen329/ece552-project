@@ -7,6 +7,7 @@ module cpu(clk, rst_n, hlt, pc);
 
     // all decl
     wire flush, taken, stall, pc_we;
+    wire [15:0] pcTarget, pcPlus2;
 
     wire [15:0] if_inst;
 
@@ -29,7 +30,7 @@ module cpu(clk, rst_n, hlt, pc);
     wire ex_ALU2Src; // 0=from RFout2; 1=inst[3:0]
     wire [2:0] ex_aluFlagZVN, ex_flagwe;
     wire ex_RFwe, ex_DataWe, ex_hlt;
-    wire[15:0] ex_pc, ex_resultToPR;
+    wire[15:0] ex_pc, ex_resultToPR, ex_pcplus2;
 
 
     wire mem_DataWe, mem_UseAluResult, mem_RFwe, mem_hlt;
@@ -50,7 +51,6 @@ module cpu(clk, rst_n, hlt, pc);
 
     // IF stage
     assign flush = taken;
-    wire [15:0] pcTarget, pcPlus2;
     CLAdder16 add0(pc, 16'h2, pcPlus2);
     PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall), .P(taken?pcTarget:pcPlus2), .Q(pc));
     InstMemory instMem(.clk(clk), .rst(rst), .enable(1'b1), .wr(1'b0), .addr(pc), .data_out(if_inst), .data_in(16'h0));
@@ -64,15 +64,15 @@ module cpu(clk, rst_n, hlt, pc);
         .FR_flagZVN(id_flagout), .flagZVN_out(id_forwardedFlag));
 
     assign id_RFsrc1 = id_inst[7:4];
-    assign id_RFsrc2 = id_A2Src ? id_inst[3:0] : id_inst[11:8];
+    assign id_RFsrc2 = id_A2Src == 1'b0 ? id_inst[3:0] : id_inst[11:8];
     RegisterFile registerFile(.clk(clk), .rst(rst), .SrcReg1(id_RFsrc1), .SrcReg2(id_RFsrc2), .DstReg(wb_RFdst), .WriteReg(wb_RFwe), .DstData(wb_RFwriteData), .SrcData1(id_RFout1), .SrcData2(id_RFout2));
 
     ForwardToBranchRegister forwardBr(.brSrcSel(id_brForwardSel), .brSrc(id_RFsrc1), .aluDst(ex_RFdst), .exDst(mem_RFdst), .willAluWrite(ex_RFwe), .willExWrite(mem_RFwe));
     assign id_forwardedBranchRegisterTarget = id_brForwardSel==2'b01 ? ex_resultToPR :
                                               id_brForwardSel==2'b10 ? mem_AluResult : id_RFout1 ;
 
-    assign id_aluSrc1 = id_ALU1Src ? id_RFsrc1 : id_RFsrc2;
-    assign id_aluSrc2 = id_ALU2Src ? id_RFsrc2 : 4'b0000;
+    assign id_aluSrc1 = id_ALU1Src==1'b0 ? id_RFsrc1 : id_RFsrc2;
+    assign id_aluSrc2 = id_ALU2Src==1'b0 ? id_RFsrc2 : 4'b0000;
     HazardController stallingController(
         .stall(stall),
         .aluSrc1(id_aluSrc1), .aluSrc2(id_aluSrc2), .brSrc(id_RFsrc1),
@@ -110,10 +110,10 @@ module cpu(clk, rst_n, hlt, pc);
 
     // EX stage
 
-    assign ex_alu1    = ex_ALU1Src ? ex_RFout1 : ex_RFout2;
-    assign ex_alu2    = ex_ALU2Src ? ex_RFout2 : ex_inst;
-    assign ex_aluSrc1 = ex_ALU1Src ? ex_RFsrc1 : ex_RFsrc2;
-    assign ex_aluSrc2 = ex_ALU2Src ? ex_RFsrc2 : 4'b0000;
+    assign ex_alu1    = ex_ALU1Src==1'b0 ? ex_RFout1 : ex_RFout2;
+    assign ex_alu2    = ex_ALU2Src==1'b0 ? ex_RFout2 : ex_inst;
+    assign ex_aluSrc1 = ex_ALU1Src==1'b0 ? ex_RFsrc1 : ex_RFsrc2;
+    assign ex_aluSrc2 = ex_ALU2Src==1'b0 ? ex_RFsrc2 : 4'b0000;
 
     ForwardToALU forwardAlu1(.aluSrcSel(ex_sel1), .aluSrc(ex_aluSrc1), .exDst(mem_RFdst), .memDst(wb_RFdst), .willExWrite(mem_UseAluResult & mem_RFwe), .willMemWrite(wb_RFwe));
     ForwardToALU forwardAlu2(.aluSrcSel(ex_sel2), .aluSrc(ex_aluSrc2), .exDst(mem_RFdst), .memDst(wb_RFdst), .willExWrite(mem_UseAluResult & mem_RFwe), .willMemWrite(wb_RFwe));
@@ -122,7 +122,8 @@ module cpu(clk, rst_n, hlt, pc);
             .B(ex_sel2==2'b01 ?mem_AluResult:ex_sel2==2'b10 ?wb_RFwriteData:ex_alu2),
             .op(ex_inst[15:12]), .out(ex_aluout), .flagZVN(ex_aluFlagZVN));
 
-    assign ex_resultToPR = (ex_inst[15:12]==4'b1110) ? ex_pc : ex_aluout;
+    CLAdder16 add1(ex_pc, 16'h0002, ex_pcplus2);
+    assign ex_resultToPR = (ex_inst[15:12]==4'b1110) ? ex_pcplus2 : ex_aluout;
 
     PipelineRegister exmem(
         .clk(clk), .rst(rst), .we(1'b1), .flush(1'b0),
@@ -134,7 +135,8 @@ module cpu(clk, rst_n, hlt, pc);
         .DataWE_in(ex_DataWe), .DataWE_ou(mem_DataWe),
         .inst_in(ex_inst), .inst_ou(mem_inst),
         .gppr1_in(ex_resultToPR), .gppr1_ou(mem_AluResult),
-        .gppr2_in(ex_RFout2), .gppr2_ou(mem_DataWriteDataFromPR)
+        .gppr2_in(ex_RFout2), .gppr2_ou(mem_DataWriteDataFromPR),
+        .gppr3_in(ex_RFsrc2), .gppr3_ou(mem_DataWriteSrcReg)
     );
 
     // MEM stage

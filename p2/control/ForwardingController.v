@@ -6,10 +6,10 @@ module ForwardToALU(aluSrcSel,aluSrc, exDst, memDst,willExWrite, willMemWrite); 
 
     assign forwardFromEx  = willExWrite  & (exDst==aluSrc);
     assign forwardFromMem = willMemWrite & (memDst==aluSrc);
-    assign aluSrcSel = aluSrc==4'b0 ? 2'b00 :
-                       willExWrite  ? 2'b01 :
-                       willMemWrite ? 2'b10 :
-                       /* else */     2'b00 ;
+    assign aluSrcSel = aluSrc==4'b0   ? 2'b00 :
+                       forwardFromEx  ? 2'b01 :
+                       forwardFromMem ? 2'b10 :
+                       /* else */       2'b00 ;
 endmodule
 
 module ForwardToMem(memSrcSel,memSrc, wbDst,willWrite);
