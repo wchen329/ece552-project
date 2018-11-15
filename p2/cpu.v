@@ -45,14 +45,18 @@ module cpu(clk, rst_n, hlt, pc);
     wire[3:0] wb_RFdst;
     wire[15:0] wb_RFwriteData;
     wire[2:0] wb_flag, wb_flagwe;
+    wire hlt_fetch_state;
+    dff hlt_fetched(.q(hlt_fetch_state), .d(~hlt_fetch_not_yet), .wen(~hlt_fetch_state), .clk(clk), .rst(rst));
 
     assign rst = ~rst_n;
     assign hlt = wb_hlt;
+    assign hlt_fetch_not_yet = if_inst[15:12] != 4'b1111 ? 1 :
+			       id_inst[15:13] != 4'b110 ? 0 : taken ? 1 : 0;
 
     // IF stage
     assign flush = taken;
     CLAdder16 add0(pc, 16'h2, pcPlus2);
-    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall), .P(taken?pcTarget:pcPlus2), .Q(pc));
+    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall & (hlt_fetch_not_yet | hlt_fetch_state)), .P(taken?pcTarget:pcPlus2), .Q(pc));
     InstMemory instMem(.clk(clk), .rst(rst), .enable(1'b1), .wr(1'b0), .addr(pc), .data_out(if_inst), .data_in(16'h0));
     IFID_Pipe_Register IFID_PR(.clk(clk), .rst(rst), .WE(pc_we & ~stall), .flush(flush), .inst_next(if_inst), .inst(id_inst), .pc_in(pc), .pc_out(id_pc));
 
