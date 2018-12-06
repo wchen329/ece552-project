@@ -1,5 +1,5 @@
-# ECE 552 Phase 2
-CPU for WISC-F18 ISA, with five stage pipeline.
+# ECE 552 Phase 3
+CPU for WISC-F18 ISA, with five stage pipeline and simple cache.
 
 ## Folders & Files
 - `primitives` gadgets such as ADDer, XORer, MUXs etc. Purely combinational.
