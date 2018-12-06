@@ -1,5 +1,6 @@
 *.bak
 *.qdb
+*.log
 *.qpg
 *.qtl
 *.wlf
