@@ -1,5 +1,5 @@
-/* A toplevel for the cache that connects to the cpu toplevel
- * The L1 Cache Toplevel encapsulated a L1 Cache Data Array and Tag Array 
+/* A toplevel for a cache that connects to the cpu toplevel
+ * The Cache Toplevel encapsulates a Cache Data Array and Tag Array 
  * and connects to the Main Memory task arbritrator in the event of a single
  * read port of the data memory directly in the event of two read ports.
  * Also includes fill FSM.
@@ -8,7 +8,7 @@
  *
  * wchen329@wisc.edu
  */
-module L1_Cache_Toplevel(clk, rst, Address_Oper, store, idle, Data_In, miss_state, Data_Out, cache_stall);
+module Cache_Toplevel(clk, rst, Address_Oper, store, idle, Data_In, miss_state, Data_Out, cache_stall);
 
 	input clk;			// Clock signal
 	input rst;			// reset signal
@@ -21,7 +21,10 @@ module L1_Cache_Toplevel(clk, rst, Address_Oper, store, idle, Data_In, miss_stat
 	output cache_stall;		// cache "busy filling" signal
 	output [15:0] Data_Out;		// output data in case of load
 
+	wire cc_miss;			// current cycle miss
+	wire cc_valid;			// current cycle request is valid?
 	wire [127:0] block_decode;	// the block to get or store to
+	wire [15:0] cc_fill_address;	// current cycle address to write to MEMORY AND CACHE if wr. enabled
 	wire [7:0] word_select;		// the word within the block to retrieve
 	wire [7:0] tag_in;		// tag to update the cache with
 	wire [7:0] tag_out;		// tag that is read
@@ -36,9 +39,13 @@ module L1_Cache_Toplevel(clk, rst, Address_Oper, store, idle, Data_In, miss_stat
 	 */
 
 	// Assign wire signals
+	
 
 	// Cache Arrays
 	DataArray CACHE_DATA(.clk(clk), .rst(rst), .DataIn(Data_In), .Write(cache_data_we), .BlockEnable(block_decode), .WordEnable(word_select) .DataOut(Data_Out));
 	MetaDataArray TAG_ARRAY(.clk(clk), .rst(rst), .DataIn(tag_in), .Write(cache_tag_we), .BlockEnable(block_decode), .DataOut(tag_out));
+
+	// Cache Fill FSM
+	Cache_Fill_FSM FILL_FSM(.clk(clk), .rst_n(~rst), .miss_detected(cc_miss), .miss_address(Address_Oper). ,write_data_array(cache_data_we), .write_tag_array(cache_tag_we), .memory_address(cc_fill_address) ,  .memory_data_valid(cc_valid));
 
 endmodule
