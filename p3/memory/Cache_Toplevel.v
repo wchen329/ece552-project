@@ -46,7 +46,6 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	// Output List
 	
 	output miss_occurred;		// miss detected, assert!
-	output way_misprediction;	// if way is not zero, then mispredicted
 	output [15:0] Data_Out;		// output data in case of load
 
 
@@ -68,7 +67,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	wire cache_data_we;		// data write enable, passed from Fill FSM
 	wire cache_tag_we;		// tag write enable, passed from Fill FSM
 	wire hit_way_0, hit_way_1;	// if way 0 or way 1 produce hits, raise a high signal
-	wire miss_way[1:0];		// only one on at a time, which one missed? similar to LRUs signal but ~ and explicitly one hot (i.e. a cold miss resolves in 1'b01, a miss in way 0).
+	wire [1:0] miss_way;		// only one on at a time, which one missed? similar to LRUs signal but ~ and explicitly one hot (i.e. a cold miss resolves in 1'b01, a miss in way 0).
 	wire [1:0] lru_next;		// next state LRU value
 	wire [5:0] tag_next_0, tag_next_1;
 					// next state tag value
@@ -100,8 +99,8 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	assign tag_out_0 = tag_raw_out_0[5:0];
 	assign tag_out_1 = tag_raw_out_1[5:0];
 	assign set_index = Address_Oper[9:4];
-	assign valids = {tag_out_1[7] . tag_out_0[7]}
-	assign block_decode_ze = {{64{1'b0}}, block_decode}
+	assign valids = {tag_out_1[7], tag_out_0[7]};
+	assign block_decode_ze = {{64{1'b0}}, block_decode};
 	//assign block_decode_data =  == 0 ? block_decode_ze : block_decode_ze << 64;
  	assign word_select = Address_Oper[3:1]; 	// For FSM designer: change these address bits to change word offset index when filling
 	assign lrus_n = {tag_out_1[6], tag_out_0[6]}; 
@@ -126,7 +125,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					: cacheop == 2'b00 ?
 						hit_occurred ? 1 
 						: 0
-					: 0;
+					: 0
 				: 0;
 
 	// Write assignments for input tags	
@@ -149,7 +148,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					: 0'b1
 
 				: cacheop == 2'b10 ?
-					miss_ways == 2'b01 ? 1'b1 : 1'b0;  
+					miss_way == 2'b01 ? 1'b1 : 1'b0  
 				: lrus_n[0];
 
 	assign lru_next[1] = cacheop == 2'b00 ?
@@ -159,7 +158,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					: 0'b1
 
 				: cacheop == 2'b10 ?
-					miss_ways == 2'b10 ? 1'b1 : 1'b0;  
+					miss_way == 2'b10 ? 1'b1 : 1'b0 
 				: lrus_n[1];
 
 		// Calculate Tag values on the next write
@@ -174,12 +173,12 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 		//
 		//		Otherwise don't fill it at all
 	assign tag_next_0 = cacheop == 2'b10 ?
-				miss_way[0] == 1 ? tag_in : tag_raw_out_0;	
-			  ; tag_raw_out_0;
+				miss_way[0] == 1 ? tag_in : tag_raw_out_0	
+			   : tag_raw_out_0;
 
 	assign tag_next_1 = cacheop == 2'b10 ?
-				miss_way[1] == 1 ? tag_in : tag_raw_out_1;	
-			  ; tag_raw_out_1;
+				miss_way[1] == 1 ? tag_in : tag_raw_out_1	
+			   : tag_raw_out_1;
 	
 	assign tag_in_full_0 = {1'b1, lru_next[0], tag_next_0};
 	assign tag_in_full_1 = {1'b1, lru_next[1], tag_next_1}; 
