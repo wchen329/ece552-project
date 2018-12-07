@@ -53,8 +53,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	
 	wire [127:0] block_decode_data;	// the block to get or store to for data 
 	wire [127:0] block_decode_ze;	// zero extended variant of block_decode
-	wire [64:0] block_decode;	// the block to get or store to
-	wire [7:0] word_select;		// the word within the block to retrieve
+	wire [63:0] block_decode;	// the block to get or store to
 	wire [7:0] tag_in_full_0, tag_in_full_1;
 					// full tag in for ways 0 and 1 
 	wire [1:0] valids;		// the valid bits valids[0] is for WAY_0 and valids[1] is for WAY_1,
@@ -62,7 +61,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					 * lrus == 10, WAY_0 is subject to be evicted, lrus == 01, WAY_1 is subject to be evicted, lrus==11 error?
 					 */
 	wire [5:0] tag_in;		// tag to update the cache with
-	wire [7:0] tag_out_0, tag_out_1;// actual tag contained in block
+	wire [5:0] tag_out_0, tag_out_1;// actual tag contained in block
 	wire [5:0] set_index;		// set index of current request
 	wire cache_data_we;		// data write enable, passed from Fill FSM
 	wire cache_tag_we;		// tag write enable, passed from Fill FSM
@@ -71,15 +70,14 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	wire [1:0] lru_next;		// next state LRU value
 	wire [5:0] tag_next_0, tag_next_1;
 					// next state tag value
+	wire [2:0] word_select;		// the word within the block to retrieve
+	wire [7:0] ws_one_hot;		// word select one hot signal
 
 	// Raw Data Outputs
 	
 	wire [15:0] DataArray_Out;	// raw data leaving cache array
 	wire [7:0] tag_raw_out_0, tag_raw_out_1;
 					// raw tag block, contains LRU and valid
-
-	// Cache State Elements
-	BitCell WAY(.clk(clk), .rst(rst | ~r_enabled | cc_valid), .D(1), .ReadEnable1(1), .Bitline1(way_scan));
 	
 	// Assign wire signals
 
@@ -99,14 +97,14 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	assign tag_out_0 = tag_raw_out_0[5:0];
 	assign tag_out_1 = tag_raw_out_1[5:0];
 	assign set_index = Address_Oper[9:4];
-	assign valids = {tag_out_1[7], tag_out_0[7]};
+	assign valids = {tag_raw_out_1[7], tag_raw_out_0[7]};
 	assign block_decode_ze = {{64{1'b0}}, block_decode};
 	//assign block_decode_data =  == 0 ? block_decode_ze : block_decode_ze << 64;
  	assign word_select = Address_Oper[3:1]; 	// For FSM designer: change these address bits to change word offset index when filling
-	assign lrus_n = {tag_out_1[6], tag_out_0[6]}; 
+	assign lrus_n = {tag_raw_out_1[6], tag_raw_out_0[6]}; 
 
 	// Assign conditional signals based on FSM states
-	assign miss_way = lrus_n == 2'b00 ? 2'b01 : ~lrus_n;
+	assign miss_way = lrus_n == 2'b00 ? 2'b01 : 2'b00; // ~lrus_n;
 
 	assign block_decode_data = cacheop == 2'b00 ? // Reading? Read with hit block only	
 					hit_way_0 == 1 ? block_decode_ze :	 // hit with way 0
@@ -164,9 +162,9 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 		// Calculate Tag values on the next write
 		//
 		// Consider:
-		//	READ: Tags never change on read
+		//	READ: LRU tag will change on read.
 		//	FILL DATA: Tags don't change because only writes data
-		//	FILL TAGS: Yes, only state that writes tags
+		//	FILL TAGS: Yes, only other that writes tags
 		//	Within FILL TAGS:
 		//		if this is the way that missed fill it with
 		//		a new tag
@@ -174,20 +172,23 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 		//		Otherwise don't fill it at all
 	assign tag_next_0 = cacheop == 2'b10 ?
 				miss_way[0] == 1 ? tag_in : tag_raw_out_0	
-			   : tag_raw_out_0;
+			   : tag_out_0;
 
 	assign tag_next_1 = cacheop == 2'b10 ?
 				miss_way[1] == 1 ? tag_in : tag_raw_out_1	
-			   : tag_raw_out_1;
+			   : tag_out_1;
 	
 	assign tag_in_full_0 = {1'b1, lru_next[0], tag_next_0};
 	assign tag_in_full_1 = {1'b1, lru_next[1], tag_next_1}; 
 
-	// Create an admittedly giant decoder
-	Decoder_6_64 DECODER(set_index, block_decode);
+	// Create an admittedly giant decoder, decode block number
+	Decoder_6_64 DECODER_DATA(set_index, block_decode);
+
+	// Word decoder
+	Decoder_3_8 DECODER_WORD(word_select, ws_one_hot);
 
 	// Cache Arrays
-	DataArray CACHE_DATA(.clk(clk), .rst(rst), .DataIn(Data_In), .Write(cache_data_we), .BlockEnable(block_decode_data), .WordEnable(word_select), .DataOut(DataArray_Out));
+	DataArray CACHE_DATA(.clk(clk), .rst(rst), .DataIn(Data_In), .Write(cache_data_we), .BlockEnable(block_decode_data), .WordEnable(ws_one_hot), .DataOut(DataArray_Out));
 	MetaDataArray TAG_ARRAY_WAY_0(.clk(clk), .rst(rst), .DataIn(tag_in_full_0), .Write(cache_tag_we), .BlockEnable(block_decode), .DataOut(tag_raw_out_0));
 	MetaDataArray TAG_ARRAY_WAY_1(.clk(clk), .rst(rst), .DataIn(tag_in_full_1), .Write(cache_tag_we), .BlockEnable(block_decode), .DataOut(tag_raw_out_1));	// include way_evict[0] so that on cold misses, only the 0 way writes
 
