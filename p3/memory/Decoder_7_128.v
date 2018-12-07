@@ -1,7 +1,7 @@
 /* Procedurally generated decoder. 
  * Generated using decoderGen script.
  */
-module Decoder_6-64(decode_in, decode_out);
+module Decoder_6_64(decode_in, decode_out);
 	input[6:0] decode_in;
 	output[127:0] decode_out;
 	assign decode_out =
