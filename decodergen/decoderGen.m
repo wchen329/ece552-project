@@ -3,10 +3,10 @@
 % A simple script that generates a specified bit length decoder
 %
 % wchen329
-decoder_input_length = 6; % change this value for different size decoder
+decoder_input_length = 7; % change this value for different size decoder
 decode_file = fopen('Decoder_' + string(decoder_input_length) + '_' + string(2^decoder_input_length) +'.v', 'w');
 fprintf(decode_file, "/* Procedurally generated decoder. \n * Generated using decoderGen script.\n */\n"); 
-fprintf(decode_file, "module Decoder_6_64(decode_in, decode_out);\n");
+fprintf(decode_file, "module Decoder_" + string(decoder_input_length) + '_' + string(2^decoder_input_length) + "(decode_in, decode_out);\n");
 fprintf(decode_file, "\tinput[" + string(decoder_input_length - 1) + ":0] decode_in;\n" );
 fprintf(decode_file, "\toutput[" + string(2^(decoder_input_length) - 1) + ":0] decode_out;\n" );
 fprintf(decode_file, "\tassign decode_out =\n");
