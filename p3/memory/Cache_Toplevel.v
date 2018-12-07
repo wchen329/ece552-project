@@ -22,12 +22,17 @@
  * Each line in a set is separated by 64 other blocks (64 block offset in
  * data).
  *
+ *
  * In the cache array, they are indexed on a set bases in parallel to the two
  * tag arrays.
  *
+ * General tip: Write the tag last. The data takes several cycles to write
+ * but the tag write is atomic. So write the data first as when the tag is
+ * written, the transaction is commited and the LRU switches around
+ *
  * wchen329@wisc.edu
  */
-module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In, Data_Out, miss_occurred);
+module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_Out, miss_occurred);
 
 	// Input List
 
@@ -35,7 +40,6 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	input rst;			// reset signal
 	input [15:0] Address_Oper;	// address to perform memory operation
 	input [15:0] Data_In;		// input data to be used in case of a store
-	input store;			// true if store, false if load
 	input r_enabled;		// true if operation is memory operation, false if not memory operation
 	input [1:0] cacheop;		// encoded control signals for FSM to perform operations on caches. 0 = read, 1 = fill, 2 = set cache tag, 3 = X
 
@@ -52,21 +56,28 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	wire [127:0] block_decode_ze;	// zero extended variant of block_decode
 	wire [64:0] block_decode;	// the block to get or store to
 	wire [7:0] word_select;		// the word within the block to retrieve
-	wire [7:0] tag_in_full;		// full tag in
+	wire [7:0] tag_in_full_0, tag_in_full_1;
+					// full tag in for ways 0 and 1 
 	wire [1:0] valids;		// the valid bits valids[0] is for WAY_0 and valids[1] is for WAY_1,
-	wire [1:0] lrus_n;		// ACTIVE LOW SIGNAL. lrus == 00, cache cold, lrus == 10, WAY_0 is subject to be evicted, lrus == 01, WAY_1 is subject to be evicted, lrus==11 error?
+	wire [1:0] lrus_n;		/* ACTIVE LOW SIGNAL inorder to work with reset. Raw signal, use miss_way instead. lrus == 00, cache cold,
+					 * lrus == 10, WAY_0 is subject to be evicted, lrus == 01, WAY_1 is subject to be evicted, lrus==11 error?
+					 */
 	wire [5:0] tag_in;		// tag to update the cache with
 	wire [7:0] tag_out_0, tag_out_1;// actual tag contained in block
 	wire [5:0] set_index;		// set index of current request
 	wire cache_data_we;		// data write enable, passed from Fill FSM
 	wire cache_tag_we;		// tag write enable, passed from Fill FSM
+	wire hit_way_0, hit_way_1;	// if way 0 or way 1 produce hits, raise a high signal
+	wire miss_way[1:0];		// only one on at a time, which one missed? similar to LRUs signal but ~ and explicitly one hot (i.e. a cold miss resolves in 1'b01, a miss in way 0).
+	wire [1:0] lru_next;		// next state LRU value
+	wire [5:0] tag_next_0, tag_next_1;
+					// next state tag value
 
 	// Raw Data Outputs
 	
 	wire [15:0] DataArray_Out;	// raw data leaving cache array
 	wire [7:0] tag_raw_out_0, tag_raw_out_1;
 					// raw tag block, contains LRU and valid
-
 
 	// Cache State Elements
 	BitCell WAY(.clk(clk), .rst(rst | ~r_enabled | cc_valid), .D(1), .ReadEnable1(1), .Bitline1(way_scan));
@@ -80,27 +91,105 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	 * just disable the read and raise the cache_stall / miss signal.
 	 */
 
-	assign miss_occurred = r_enabled & ~( valids[0] & (tag_in == tag_out_0) | valids[1] & (tag_in == tag_out_1) );
+	assign hit_way_0 = valids[0] & (tag_in == tag_out_0);
+	assign hit_way_1 = valids[1] & (tag_in == tag_out_1);
+	assign miss_occurred = r_enabled & ~(hit_way_0 | hit_way_1);
+	assign hit_occurred = r_enabled & (hit_way_0 | hit_way_1);
 	assign Data_Out = DataArray_Out;
-	assign cache_data_we = cacheop == 2'b01 ? 1 : 0;
-	assign cache_tag_we = cacheop == 2'b10 ? 1 : 0;
 	assign tag_in = Address_Oper[15:10];
-	assign tag_out = tag_raw_out[5:0];
+	assign tag_out_0 = tag_raw_out_0[5:0];
+	assign tag_out_1 = tag_raw_out_1[5:0];
 	assign set_index = Address_Oper[9:4];
 	assign valids = {tag_out_1[7] . tag_out_0[7]}
-	assign block_decode_data = lrus == 0 ? block_decode_ze : block_decode_ze << 64;
- 	assign word_select = Address_Oper[3:1]; // For FSM designer: change these address bits to change word offset index
+	assign block_decode_ze = {{64{1'b0}}, block_decode}
+	//assign block_decode_data =  == 0 ? block_decode_ze : block_decode_ze << 64;
+ 	assign word_select = Address_Oper[3:1]; 	// For FSM designer: change these address bits to change word offset index when filling
 	assign lrus_n = {tag_out_1[6], tag_out_0[6]}; 
 
-	// Write assignments	
-	assign tag_in_full = {1'b1, 1, tag_in};
+	// Assign conditional signals based on FSM states
+	assign miss_way = lrus_n == 2'b00 ? 2'b01 : ~lrus_n;
+
+	assign block_decode_data = cacheop == 2'b00 ? // Reading? Read with hit block only	
+					hit_way_0 == 1 ? block_decode_ze :	 // hit with way 0
+					hit_way_1 == 1 ? block_decode_ze << 64 : // hit with way 1
+					{128{1'b0}}				 // disable, this would be a miss case so doesn't matter anyway
+				: {128{1'b0}};	// Disable decoder if not reading
+
+	// Write only when trying to "fill" the cache but the cache tag write
+	// happens silently every hit!
+	assign cache_data_we = 	r_enabled ?
+					cacheop == 2'b01 ? 1 
+					: 0
+				: 0;
+	assign cache_tag_we = 	r_enabled ?
+					cacheop == 2'b10 ? 1
+					: cacheop == 2'b00 ?
+						hit_occurred ? 1 
+						: 0
+					: 0;
+				: 0;
+
+	// Write assignments for input tags	
+
+		// Calculate LRU values on the next write
+		//
+		// Consider
+		// 	READ: LRU will change iff there is a HIT, otherwise it
+		// 	will change on FILL TAGS
+		//
+		// 	FILL DATA: No, this only writes data.
+		//
+		// 	FILL TAGS: Yes, on a miss, the missed way will become
+		// 	the new most recently used, and the least recently
+		// 	used is the one which did not get evicted.
+	assign lru_next[0] = cacheop == 2'b00 ?
+
+				miss_occurred == 1 ? lrus_n[0]
+				: hit_way_0 == 1'b1 ? 1'b1
+					: 0'b1
+
+				: cacheop == 2'b10 ?
+					miss_ways == 2'b01 ? 1'b1 : 1'b0;  
+				: lrus_n[0];
+
+	assign lru_next[1] = cacheop == 2'b00 ?
+
+				miss_occurred == 1 ? lrus_n[1]
+				: hit_way_1 == 1'b1 ? 1'b1
+					: 0'b1
+
+				: cacheop == 2'b10 ?
+					miss_ways == 2'b10 ? 1'b1 : 1'b0;  
+				: lrus_n[1];
+
+		// Calculate Tag values on the next write
+		//
+		// Consider:
+		//	READ: Tags never change on read
+		//	FILL DATA: Tags don't change because only writes data
+		//	FILL TAGS: Yes, only state that writes tags
+		//	Within FILL TAGS:
+		//		if this is the way that missed fill it with
+		//		a new tag
+		//
+		//		Otherwise don't fill it at all
+	assign tag_next_0 = cacheop == 2'b10 ?
+				miss_way[0] == 1 ? tag_in : tag_raw_out_0;	
+			  ; tag_raw_out_0;
+
+	assign tag_next_1 = cacheop == 2'b10 ?
+				miss_way[1] == 1 ? tag_in : tag_raw_out_1;	
+			  ; tag_raw_out_1;
+	
+	assign tag_in_full_0 = {1'b1, lru_next[0], tag_next_0};
+	assign tag_in_full_1 = {1'b1, lru_next[1], tag_next_1}; 
 
 	// Create an admittedly giant decoder
 	Decoder_6_64 DECODER(set_index, block_decode);
 
 	// Cache Arrays
 	DataArray CACHE_DATA(.clk(clk), .rst(rst), .DataIn(Data_In), .Write(cache_data_we), .BlockEnable(block_decode_data), .WordEnable(word_select), .DataOut(DataArray_Out));
-	MetaDataArray TAG_ARRAY_WAY_0(.clk(clk), .rst(rst), .DataIn(tag_in_full), .Write(cache_tag_we & ~lrus_n[0]), .BlockEnable(block_decode), .DataOut(tag_raw_out_0));
-	MetaDataArray TAG_ARRAY_WAY_1(.clk(clk), .rst(rst), .DataIn(tag_in_full), .Write(cache_tag_we & ~lrus_n[1] & (lrus_n[0])), .BlockEnable(block_decode), .DataOut(tag_raw_out_1));	// include way_evict[0] so that on cold misses, only the 0 way writes
+	MetaDataArray TAG_ARRAY_WAY_0(.clk(clk), .rst(rst), .DataIn(tag_in_full_0), .Write(cache_tag_we), .BlockEnable(block_decode), .DataOut(tag_raw_out_0));
+	MetaDataArray TAG_ARRAY_WAY_1(.clk(clk), .rst(rst), .DataIn(tag_in_full_1), .Write(cache_tag_we), .BlockEnable(block_decode), .DataOut(tag_raw_out_1));	// include way_evict[0] so that on cold misses, only the 0 way writes
 
 endmodule
