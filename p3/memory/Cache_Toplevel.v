@@ -159,12 +159,12 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					miss_way == 2'b10 ? 1'b1 : 1'b0 
 				: lrus_n[1];
 
-		// Calculate Tag values on the next write
+		// Calculate Tag values on the next write (TAG ONLY NOT LRU OR VALID)
 		//
 		// Consider:
-		//	READ: LRU tag will change on read.
+		//	READ: Does not change on read.
 		//	FILL DATA: Tags don't change because only writes data
-		//	FILL TAGS: Yes, only other that writes tags
+		//	FILL TAGS: Yes, only that writes tags
 		//	Within FILL TAGS:
 		//		if this is the way that missed fill it with
 		//		a new tag
