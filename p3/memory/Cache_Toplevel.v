@@ -8,7 +8,7 @@
  *
  * Addresses are thus partitioned as:
  * [ 6 ]   [ 6 ]   [ 4 ]
- * tag	   set	   byte offset
+ * tag     set     byte offset
  *
  * Furthermore, each tag array block has 8 bit buses. The tag array block is
  * partitioned as follows:
