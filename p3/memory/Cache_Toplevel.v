@@ -15,13 +15,18 @@
  *
  * [ 1 ]   [ 1 ]   [ 6 ]
  * valid   lru     tag
- * -
  *
  * lru == 1 ? (least recently used) : (not most recently used);
+ *
+ * Cache blocks of the same set are aligned adjacent in the cache. For example
+ * set 0 have as members both blocks 0 and 1. First block in a set is therein
+ * 2n where n is the set number
  *
  * wchen329@wisc.edu
  */
 module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In, Data_Out, miss_occurred);
+
+	// Input List
 
 	input clk;			// Clock signal
 	input rst;			// reset signal
@@ -31,17 +36,28 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	input r_enabled;		// true if operation is memory operation, false if not memory operation
 	input [1:0] cacheop;		// encoded control signals for FSM to perform operations on caches. 0 = read, 1 = fill, 2 = set cache tag, 3 = X
 
-	output miss_occurred;
+	// Output List
+	
+	output miss_occurred;		// miss detected, assert!
 	output [15:0] Data_Out;		// output data in case of load
 
+
+	// Internal wiring
+	
 	wire cc_valid;			// current cycle request is valid?
+	wire cc_lru;			// current cycle is lru block?
 	wire [127:0] block_decode;	// the block to get or store to
 	wire [7:0] word_select;		// the word within the block to retrieve
-	wire [7:0] tag_in;		// tag to update the cache with
-	wire [7:0] tag_out;		// tag that is read
+	wire [5:0] tag_in;		// tag to update the cache with
+	wire [5:0] tag_out;		// actual tag contained in block
+	wire [5:0] set_index;		// set index of current request
 	wire cache_data_we;		// data write enable, passed from Fill FSM
 	wire cache_tag_we;		// tag write enable, passed from Fill FSM
+
+	// Raw Data Outputs
+	
 	wire [15:0] DataArray_Out;	// raw data leaving cache array
+	wire [7:0] tag_raw_out;		// raw tag block, contains LRU and valid
 
 	/* Evaluate cache miss signal
 	 * In order to evaluate the miss signal, "speculate" cache hit first,
@@ -51,10 +67,16 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	 */
 
 	// Assign wire signals
+
 	assign miss_occurred = (~cc_valid & (tag_in != tag_out)); // a miss if the read tag is different from tag to write
 	assign Data_Out = {15{~miss_occurred}} & DataArray_Out; // a miss makes the data out NULL
-	assign cache_data_we = Cacheop == 2'b01 ? 1 : 0; 
+	assign cache_data_we = Cacheop == 2'b01 ? 1 : 0;
 	assign cache_tag_we = Cacheop == 2'b10 ? 1 : 0;
+	assign tag_in = Address_Oper[15:10];
+	assign tag_out = tag_raw_out[5:0];
+	assign lru = tag_raw_out[6];
+	assign cc_valid = tag_raw_out[7];
+	assign set_index = Address_Oper[9:4];
 
 	// Create an admittedly giant decoder
 
