@@ -24,7 +24,7 @@
  *
  * wchen329@wisc.edu
  */
-module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In, Data_Out, miss_occurred);
+module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In, Data_Out, miss_occurred, way_misprediction);
 
 	// Input List
 
@@ -39,6 +39,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	// Output List
 	
 	output miss_occurred;		// miss detected, assert!
+	output way_misprediction;	// if way is not zero, then mispredicted
 	output [15:0] Data_Out;		// output data in case of load
 
 
@@ -53,11 +54,33 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	wire [5:0] set_index;		// set index of current request
 	wire cache_data_we;		// data write enable, passed from Fill FSM
 	wire cache_tag_we;		// tag write enable, passed from Fill FSM
+	wire way_scan;			// the current cache way in initial scan
+	wire way_miss;			// the cache way to fill if a miss
+	wire actual_way;		// actual way used for cache indexing
+	wire hit;			// a hit that may be eventual but a hit nonetheless
 
 	// Raw Data Outputs
 	
 	wire [15:0] DataArray_Out;	// raw data leaving cache array
 	wire [7:0] tag_raw_out;		// raw tag block, contains LRU and valid
+
+
+	// Cache State Elements
+	BitCell WAY(.clk(clk), .rst(rst | ~r_enabled | cc_valid), .D(1), .ReadEnable1(1), .Bitline1(way_scan));
+	
+	/* The LRU Miss Handler
+ 	 * This FSM only assumes the worst, it will take in the LRU of the
+ 	 * first read, then the second read if it occurs, and if there is
+ 	 * a miss then it will output the correct associativity to index into
+ 	 * for cache misses.
+ 	 *
+ 	 * Mealy. Takes in input and stores it the same cycle on the second
+ 	 * cycle.
+ 	 *
+ 	 */
+	LRU_MissHandler_FSM LMHANDLER(.clk(clk), .rst(rst | ~r_enabled), .LRU_in(cc_lru), .current_way(way_scan), .correct_way(way_miss)); 
+
+	// Assign wire signals
 
 	/* Evaluate cache miss signal
 	 * In order to evaluate the miss signal, "speculate" cache hit first,
@@ -66,23 +89,26 @@ module Cache_Toplevel(clk, rst, Address_Oper, store, r_enabled, cacheop, Data_In
 	 * just disable the read and raise the cache_stall / miss signal.
 	 */
 
-	// Assign wire signals
-
-	assign miss_occurred = (~cc_valid & (tag_in != tag_out)); // a miss if the read tag is different from tag to write
-	assign Data_Out = {15{~miss_occurred}} & DataArray_Out; // a miss makes the data out NULL
-	assign cache_data_we = Cacheop == 2'b01 ? 1 : 0;
-	assign cache_tag_we = Cacheop == 2'b10 ? 1 : 0;
+	assign miss_occurred = ~hit & r_enabled & way_scan; // a miss if the read tag is different from tag to write, or not valid, but only on second attempt
+	assign Data_Out = DataArray_Out;
+	assign cache_data_we = cacheop == 2'b01 ? 1 : 0;
+	assign cache_tag_we = cacheop == 2'b10 ? 1 : 0;
 	assign tag_in = Address_Oper[15:10];
 	assign tag_out = tag_raw_out[5:0];
-	assign lru = tag_raw_out[6];
+	assign cc_lru = tag_raw_out[6];
 	assign cc_valid = tag_raw_out[7];
 	assign set_index = Address_Oper[9:4];
+	assign actual_way = (way_scan & ~miss_occurred) | (way_miss & miss_occurred);
+	assign hit = cc_valid & (tag_in == tag_out);
+
+ 	assign word_select = Address_Oper[3:1]; // For FSM designer: change these address bits to change word offset index
+
 
 	// Create an admittedly giant decoder
-
+	Decoder_7_128 DECODER({set_index, actual_way }, block_decode); 
 
 	// Cache Arrays
-	DataArray CACHE_DATA(.clk(clk), .rst(rst), .DataIn(Data_In), .Write(cache_data_we), .BlockEnable(block_decode), .WordEnable(word_select) .DataOut(DataArray_Out));
+	DataArray CACHE_DATA(.clk(clk), .rst(rst), .DataIn(Data_In), .Write(cache_data_we), .BlockEnable(block_decode), .WordEnable(word_select), .DataOut(DataArray_Out));
 	MetaDataArray TAG_ARRAY(.clk(clk), .rst(rst), .DataIn(tag_in), .Write(cache_tag_we), .BlockEnable(block_decode), .DataOut(tag_out));
 
 endmodule
