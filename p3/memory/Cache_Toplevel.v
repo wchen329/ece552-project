@@ -1,6 +1,6 @@
 /* A toplevel for a cache that connects to the cpu toplevel
  * The Cache Toplevel encapsulates a Cache Data Array and Tag Array 
- * and connects to the Main Memory task arbritrator / FSM in the event of a single
+ * and connects to the Main Memory task arbritrator / FSM
  *
  * Addresses are 16 bits. Caches are 2 way associative, which results in 64
  * sets. Each cache block is 16
@@ -17,6 +17,7 @@
  * valid   lru     tag
  *
  * lru == 0 ? (least recently used) : (not most recently used);
+ * [ Note that this LRU signal is essentially active low in order to benefit from reset ]
  *
  * Cache blocks of the same set are not aligned adjacent in the cache.
  * Each line in a set is separated by 64 other blocks (64 block offset in
@@ -28,7 +29,7 @@
  *
  * General tip: Write the tag last. The data takes several cycles to write
  * but the tag write is atomic. So write the data first as when the tag is
- * written, the transaction is commited and the LRU switches around
+ * written, the transaction is commited and the LRU switches around.
  *
  * wchen329@wisc.edu
  */
@@ -81,7 +82,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	wire [15:0] DataArray_Out;	// raw data leaving cache array
 	wire [7:0] tag_raw_out_0, tag_raw_out_1;
 					// raw tag block, contains LRU and valid
-	
+
 	// Assign wire signals
 
 	/* Evaluate cache miss signal
@@ -124,19 +125,20 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					cacheop == 2'b01 ? 1 
 					: 0
 				: 0;
-	assign cache_tag_we = 	r_enabled ?
-					cacheop == 2'b10 ? 1
-					: cacheop == 2'b00 ?
-						hit_occurred ? 1 
+	assign cache_tag_we =
+					r_enabled ?
+						cacheop == 2'b10 ? 1
+						: cacheop == 2'b00 ?
+							hit_occurred ? 1 
+							: 0
 						: 0
-					: 0
-				: 0;
+					: 0;
 
 	// Write assignments for input tags	
 
 		// Calculate Valid values on the next write
 		//
-		// Consider
+		// Consider:
 		// 	READ: Valid doesn't change on read.
 		//
 		// 	FILL DATA: Valid doesn't change on data fill.
@@ -155,7 +157,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 
 		// Calculate LRU values on the next write
 		//
-		// Consider
+		// Consider:
 		// 	READ: LRU will change iff there is a HIT, otherwise it
 		// 	will change on FILL TAGS
 		//
@@ -164,24 +166,27 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 		// 	FILL TAGS: Yes, on a miss, the missed way will become
 		// 	the new most recently used, and the least recently
 		// 	used is the one which did not get evicted.
-	assign lru_next[0] = cacheop == 2'b00 ?
+	assign lru_next[0] =
 
-				miss_occurred == 1 ? lrus_n[0]
-				: hit_way_0 == 1'b1 ? 1'b1
-					: 0'b1
+				cacheop == 2'b00 ?
 
-				: cacheop == 2'b10 ?
-					miss_way == 2'b01 ? 1'b1 : 1'b0  
+					miss_occurred == 1 ? lrus_n[0]
+					: hit_way_0 == 1'b1 ? 1'b1
+							: 0'b1
+
+					: cacheop == 2'b10 ?
+						miss_way == 2'b01 ? 1'b1 : 1'b0  
 				: lrus_n[0];
 
-	assign lru_next[1] = cacheop == 2'b00 ?
+	assign lru_next[1] =
+				cacheop == 2'b00 ?
 
-				miss_occurred == 1 ? lrus_n[1]
-				: hit_way_1 == 1'b1 ? 1'b1
-					: 0'b1
+					miss_occurred == 1 ? lrus_n[1]
+					: hit_way_1 == 1'b1 ? 1'b1
+						: 0'b1
 
-				: cacheop == 2'b10 ?
-					miss_way == 2'b10 ? 1'b1 : 1'b0 
+					: cacheop == 2'b10 ?
+						miss_way == 2'b10 ? 1'b1 : 1'b0 
 				: lrus_n[1];
 
 		// Calculate Tag values on the next write (TAG ONLY NOT LRU OR VALID)
