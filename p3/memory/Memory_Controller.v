@@ -11,7 +11,7 @@
  *
  * wchen329@wisc.edu
  */
-module Memory_Controller(clk, rst, d_enable, if_we, dm_we, if_addr, dm_addr,
+module Memory_Controller(clk, rst, if_we, dm_we, if_addr, dm_addr,
 				if_data_out, dm_data_out, if_data_in, dm_data_in, if_miss, dm_miss);
 	// Inputs
 	input clk;			// clock
@@ -64,7 +64,6 @@ module Memory_Controller(clk, rst, d_enable, if_we, dm_we, if_addr, dm_addr,
 	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(mm_addr), 1'b1, .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
 	// Define Fill FSM
-
 	assign I_word_index = if_miss ?
 					fsm_data_fill == 1 ? working_address[3:0];	
 				: if_addr[3:0];
@@ -88,10 +87,18 @@ module Memory_Controller(clk, rst, d_enable, if_we, dm_we, if_addr, dm_addr,
 
 	assign fsm_state =	fsm_data_fill == 1 ? 2'b01 :		// fsm is trying to fill data
 				fsm_tag_fill == 1 ? 2'b10 : 2'b00	// fsm is trying to fill tags, if not trying to fill anything it's reading still
+	
 	// DRIVING == 1 ? I-mem drives : D-mem drives
 	assign fsm_address_in	= driving == 1 ? if_addr : dm_addr;	// select correct address depending on what's driving the fsm (DATA or IF?)
+	assign mm_addr = fsm_address_in;
 
-	assign fsm_data_in 	= driving == 1 ? if_data : dm_data;	// select correct data depending on what's driving the fsm
+	assign store = if_we | dm_we;
+
+	assign fsm_data_in 	= 	store ?
+						driving == 1 ? if_data : dm_data	// select correct data depending on what's driving the fsm
+					: mm_out;
+
+	assign fsm_data_in	=	driving == 1 ? if_data : dm_data
 
 	// FSM declaration
 	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~fsm_active), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
