@@ -1,6 +1,7 @@
 *.bak
 *.qdb
 *.qpg
+*.do
 *.qtl
 *.wlf
 *.mti
