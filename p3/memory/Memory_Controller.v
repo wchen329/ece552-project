@@ -16,7 +16,6 @@ module Memory_Controller(clk, rst, if_we, dm_we, if_addr, dm_addr,
 	// Inputs
 	input clk;			// clock
 	input rst;			// active high sync. reset
-	input d_enable;			// enable signal for d-mem bus
 	input if_we;			// instruction fetch bus write enable
 	input dm_we;			// data memory bus write enable
 	input [15:0] if_addr;		// address for instruction fetch bus
@@ -57,20 +56,20 @@ module Memory_Controller(clk, rst, if_we, dm_we, if_addr, dm_addr,
 	wire fsm_working;
 
 	// Two caches, I-cache, D-cache
-	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Addr_Oper(I_cache_addr_in) .r_enabled(1'b1), .cacheop(fsm_state), .Data_In(if_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
-	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Addr_Oper(D_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state), .Data_In(dm_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
+	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state), .Data_In(if_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
+	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state), .Data_In(dm_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
 
 	// THE Main Memory Module
-	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(mm_addr), 1'b1, .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(mm_addr), .enable(1'b1), .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
 	// Define Fill FSM
 	assign I_word_index = if_miss ?
-					fsm_data_fill == 1 ? working_address[3:0];	
+					fsm_data_fill == 1 ? working_address[3:0] : if_addr[3:0]
 				: if_addr[3:0];
 
 	assign D_word_index = dm_miss ?
-					fsm_data_fill == 1 ? working_address[3:0];
-				: dm_addr[3:0];
+					fsm_data_fill == 1 ? working_address[3:0] : dm_addr[3:0]
+				: if_addr[3:0];
 
 	assign I_cache_addr_in = { if_addr[15:4], I_word_index };
 	assign D_cache_addr_in = { dm_addr[15:4], D_word_index };
@@ -86,7 +85,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, if_addr, dm_addr,
 	assign fsm_active =	miss_states == 2'b00 ? 0 : 1;	// fsm is not active if no miss, but is active if any miss happens
 
 	assign fsm_state =	fsm_data_fill == 1 ? 2'b01 :		// fsm is trying to fill data
-				fsm_tag_fill == 1 ? 2'b10 : 2'b00	// fsm is trying to fill tags, if not trying to fill anything it's reading still
+				fsm_tag_fill == 1 ? 2'b10 : 2'b00;	// fsm is trying to fill tags, if not trying to fill anything it's reading still
 	
 	// DRIVING == 1 ? I-cache and I-bus drives : D-cache and D-bus drives
 	assign fsm_address_in	= driving == 1 ? if_addr : dm_addr;	// select correct address depending on what's driving the fsm (DATA or IF?)
@@ -95,10 +94,10 @@ module Memory_Controller(clk, rst, if_we, dm_we, if_addr, dm_addr,
 	assign store = if_we | dm_we;
 
 	assign fsm_data_in 	= 	store ?
-						driving == 1 ? if_data : dm_data	// select correct data depending on what's driving the fsm
+						driving == 1 ? if_data_in : dm_data_in	// select correct data depending on what's driving the fsm
 					: mm_out;
 
-	assign fsm_data_in	=	driving == 1 ? if_data : dm_data
+	assign mm_in	=	driving == 1 ? if_data_in : dm_data_in;
 
 	// FSM declaration
 	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~fsm_active | ~rst), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
