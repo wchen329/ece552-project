@@ -107,13 +107,16 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	assign lrus_n = {tag_raw_out_1[6], tag_raw_out_0[6]}; 
 
 	// Assign conditional signals based on FSM states
-	assign miss_way = lrus_n == 2'b00 ? 2'b01 : 2'b00; // ~lrus_n;
+	assign miss_way = lrus_n == 2'b00 ? 2'b01 : ~lrus_n;
 
 	assign block_decode_data = cacheop == 2'b00 ? // Reading? Read with hit block only	
-					hit_way_0 == 1 ? block_decode_ze :	 // hit with way 0
-					hit_way_1 == 1 ? block_decode_ze << 64 : // hit with way 1
-					{128{1'b0}}				 // disable, this would be a miss case so doesn't matter anyway
-				: {128{1'b0}};	// Disable decoder if not reading
+					hit_way_0 == 1 ? block_decode_ze
+					: hit_way_1 == 1 ? block_decode_ze << 64 : {128{1'b0}}	// disable, this would be a miss case so doesn't matter anyway
+				
+				: cacheop == 2'b01 ?	// Filling? Make sure to fill the way that the miss occurred
+					miss_way[0] == 1 ? block_decode_ze		
+					: miss_way[1] == 1 ? block_decode_ze << 64 : {128{1'b0}} // if there's no misses then don't write
+				: {128{1'b0}};	// finally if not filling or reading don't de anything
 
 	// Write only when trying to "fill" the cache but the cache tag write
 	// happens silently every hit!
@@ -141,11 +144,11 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 		// 	FILL TAGS: Yes, on a miss, the missed way will become
 		// 	valid when replaced. A valid block will be assumed to be valid until reset.
 		//
-	assign valid_next_0 = cacheop == 2'b010 ?
+	assign valid_next_0 = cacheop == 2'b10 ?
 				miss_way[0] == 1 ? 1 : valids[0]
 			: valids[0];	
 
-	assign valid_next_1 = cacheop == 2'b010 ?
+	assign valid_next_1 = cacheop == 2'b10 ?
 				miss_way[1] == 1 ? 1 : valids[1]
 			: valids[1];	
 
