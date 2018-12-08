@@ -45,6 +45,8 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	// Special wires used for cache
 	wire [15:0] I_cache_addr_in;
 	wire [15:0] D_cache_addr_in;
+	wire [15:0] I_data_in;
+	wire [15:0] D_data_in;
 	wire [3:0] I_word_index;
 	wire [3:0] D_word_index;
 
@@ -57,11 +59,11 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire fsm_working;
 
 	// Two caches, I-cache, D-cache
-	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state_0), .Data_In(if_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
-	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(fsm_state_1), .Data_In(dm_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
+	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state_0), .Data_In(I_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
+	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(fsm_state_1), .Data_In(D_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
 
 	// THE Main Memory Module
-	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(mm_addr), .enable(1'b1), .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(working_address), .enable(1'b1), .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
 	// Define Fill FSM
 	assign I_word_index = if_miss ?
@@ -70,7 +72,20 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 
 	assign D_word_index = dm_miss ?
 					fsm_data_fill == 1 ? working_address[3:0] : dm_addr[3:0]
-				: if_addr[3:0];
+				: dm_addr[3:0];
+
+	// If not missing, don't write to the cache (i.e. write cache with what's already in there)!
+	// However, if missing then:
+		// I cache - write what's retrived from main memory
+		// D cache - write input data if store otherwise write what's retrieved from main memory
+
+	assign I_data_in =	if_miss ?
+					mm_out	// can add a store signal for if in future if needed
+				: if_data_out;
+		
+	assign D_data_in =	dm_miss ?
+					store ? dm_data_in : mm_out 
+				: dm_data_out; 
 
 	assign I_cache_addr_in = { if_addr[15:4], I_word_index };
 	assign D_cache_addr_in = { dm_addr[15:4], D_word_index };
@@ -104,6 +119,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 
 	assign store = if_we | dm_we;
 
+	// NOTE: this signal may not be needed?
 	assign fsm_data_in 	= 	store ?
 						driving == 1 ? if_data_in : dm_data_in	// select correct data depending on what's driving the fsm
 					: mm_out;
