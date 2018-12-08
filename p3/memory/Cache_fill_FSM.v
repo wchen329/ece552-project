@@ -17,7 +17,7 @@ output [15:0] memory_address;
 
 
 // Register Wires
-wire [3:0] count_reg_D, count_reg_Q, cycd_reg_D, cycd_reg_Q;
+wire [3:0] count_reg_D, count_reg_Q;
 wire 	exception,	// held when handling miss
 	fsm_active,
 	handling_done;	// held when all is done with handling a miss
@@ -29,13 +29,11 @@ wire [15:0] current_address_plus_two;
 // Implementation Detail
 BitCell EXCEPTION_STATE(clk, ~rst_n | handling_done, miss_detected, 1'b1, 1'b1, 1'b0, exception, ); // a bit cell which captures the error state of a miss detected
 
-Register_4bit COUNT_REG(clk, ~fsm_active | ~rst_n | handling_done, count_reg_D , (count_reg_Q != 8) & (cycd_reg_Q == 3), 1'b1, 1'b0, count_reg_Q, ); // holds the current "count state"
-Register_4bit DELAY_COUNT (clk, ~fsm_active | (cycd_reg_Q == 3) | ~rst_n | handling_done, cycd_reg_D, 1'b1, 1'b1, 1'b0, cycd_reg_Q, ); // keeps track of how many cycles waited as state
+Register_4bit COUNT_REG(clk, ~fsm_active | ~rst_n | handling_done, count_reg_D , (count_reg_Q != 8) & (memory_data_valid), 1'b1, 1'b0, count_reg_Q, ); // holds the current "count state"
 Register WORKING_ADDRESS(clk, ~fsm_active | ~rst_n | handling_done, next_address, 1'b1, 1'b1, 1'b0, current_address);
 
 // Incrementer for segment count and delay count 
 adder_4bit_cla_simple COUNT_REQ_INC(,, count_reg_D, count_reg_Q, 1, 1'b0); 
-adder_4bit_cla_simple DELAY_COUNT_INC(,, cycd_reg_D, 1, cycd_reg_Q, 1'b0);
 
 // Increment the current address by two
 adder_16bit_cla_simple ADDRESS_INC(current_address_plus_two, current_address, 2);
@@ -44,15 +42,16 @@ adder_16bit_cla_simple ADDRESS_INC(current_address_plus_two, current_address, 2)
 assign base_address = {miss_address[15:4], {4'b0000}};
 
 // Assign state
-assign fsm_active = exception | miss_detected; 
+assign fsm_active = //exception |
+			miss_detected; 
 assign next_address = (count_reg_Q == 0) ? base_address :
-			(cycd_reg_Q == 3) ? current_address_plus_two
+			(memory_data_valid) ? current_address_plus_two
 			: current_address;
 assign handling_done = (count_reg_Q == 8) ? 1 : 0;
 
 // Assign state outputs
 assign write_tag_array = (count_reg_Q == 8) ? 1 : 0;
-assign write_data_array = (cycd_reg_Q == 3) ? 1 : 0;
+assign write_data_array = (memory_data_valid) ? 1 : 0;
 assign fsm_busy = fsm_active & ~handling_done;
 assign memory_address = current_address;
 
