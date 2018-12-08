@@ -88,7 +88,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, if_addr, dm_addr,
 	assign fsm_state =	fsm_data_fill == 1 ? 2'b01 :		// fsm is trying to fill data
 				fsm_tag_fill == 1 ? 2'b10 : 2'b00	// fsm is trying to fill tags, if not trying to fill anything it's reading still
 	
-	// DRIVING == 1 ? I-mem drives : D-mem drives
+	// DRIVING == 1 ? I-cache and I-bus drives : D-cache and D-bus drives
 	assign fsm_address_in	= driving == 1 ? if_addr : dm_addr;	// select correct address depending on what's driving the fsm (DATA or IF?)
 	assign mm_addr = fsm_address_in;
 
@@ -101,7 +101,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, if_addr, dm_addr,
 	assign fsm_data_in	=	driving == 1 ? if_data : dm_data
 
 	// FSM declaration
-	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~fsm_active), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
+	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~fsm_active | ~rst), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
 		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .memory_data(fsm_data_in), .memory_data_valid(valid_data_state));
 
 
