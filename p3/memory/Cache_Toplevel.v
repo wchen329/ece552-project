@@ -73,6 +73,9 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	wire [2:0] word_select;		// the word within the block to retrieve
 	wire [7:0] ws_one_hot;		// word select one hot signal
 
+	wire valid_next_0;		// next state valid bit for way 0
+	wire valid_next_1;		// next state valid bit for way 1
+
 	// Raw Data Outputs
 	
 	wire [15:0] DataArray_Out;	// raw data leaving cache array
@@ -128,6 +131,25 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 
 	// Write assignments for input tags	
 
+		// Calculate Valid values on the next write
+		//
+		// Consider
+		// 	READ: Valid doesn't change on read.
+		//
+		// 	FILL DATA: Valid doesn't change on data fill.
+		//
+		// 	FILL TAGS: Yes, on a miss, the missed way will become
+		// 	valid when replaced. A valid block will be assumed to be valid until reset.
+		//
+	assign valid_next_0 = cacheop == 2'b010 ?
+				miss_way[0] == 1 ? 1 : valids[0]
+			: valids[0];	
+
+	assign valid_next_1 = cacheop == 2'b010 ?
+				miss_way[1] == 1 ? 1 : valids[1]
+			: valids[1];	
+
+
 		// Calculate LRU values on the next write
 		//
 		// Consider
@@ -178,8 +200,8 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 				miss_way[1] == 1 ? tag_in : tag_raw_out_1	
 			   : tag_out_1;
 	
-	assign tag_in_full_0 = {1'b1, lru_next[0], tag_next_0};
-	assign tag_in_full_1 = {1'b1, lru_next[1], tag_next_1}; 
+	assign tag_in_full_0 = {valid_next_0, lru_next[0], tag_next_0};
+	assign tag_in_full_1 = {valid_next_1, lru_next[1], tag_next_1}; 
 
 	// Create an admittedly giant decoder, decode block number
 	Decoder_6_64 DECODER_DATA(set_index, block_decode);
