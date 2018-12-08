@@ -115,8 +115,13 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					: hit_way_1 == 1 ? block_decode_ze << 64 : {128{1'b0}}	// disable, this would be a miss case so doesn't matter anyway
 				
 				: cacheop == 2'b01 ?	// Filling? Make sure to fill the way that the miss occurred
-					miss_way[0] == 1 ? block_decode_ze		
-					: miss_way[1] == 1 ? block_decode_ze << 64 : {128{1'b0}} // if there's no misses then don't write
+					miss_occurred == 1 ?
+						miss_way[0] == 1 ? block_decode_ze		
+						: miss_way[1] == 1 ? block_decode_ze << 64 : {128{1'b0}} // if there's no misses then don't write
+					: // If there's no miss use the way that is hit
+						hit_way_0 == 1 ? block_decode_ze
+						: hit_way_1 == 1 ? block_decode_ze << 64 : {128{1'b0}}	// disable, this would be a miss case so doesn't matter anyway
+
 				: {128{1'b0}};	// finally if not filling or reading don't de anything
 
 	// Write only when trying to "fill" the cache but the cache tag write
@@ -147,11 +152,15 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 		// 	valid when replaced. A valid block will be assumed to be valid until reset.
 		//
 	assign valid_next_0 = cacheop == 2'b10 ?
-				miss_way[0] == 1 ? 1 : valids[0]
+				miss_occurred == 1 ?
+					miss_way[0] == 1 ? 1 : valids[0]
+				: valids[0]
 			: valids[0];	
 
 	assign valid_next_1 = cacheop == 2'b10 ?
-				miss_way[1] == 1 ? 1 : valids[1]
+				miss_occurred == 1 ?
+					miss_way[1] == 1 ? 1 : valids[1]
+				: valids[1]
 			: valids[1];	
 
 
@@ -171,22 +180,24 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 				cacheop == 2'b00 ?
 
 					miss_occurred == 1 ? lrus_n[0]
-					: hit_way_0 == 1'b1 ? 1'b1
-							: 0'b1
+					: hit_way_0 == 1'b1 ? 1'b1 : 1'b0
 
 					: cacheop == 2'b10 ?
-						miss_way == 2'b01 ? 1'b1 : 1'b0  
+						miss_occurred == 1 ?
+							miss_way == 2'b01 ? 1'b1 : 1'b0
+						: lrus_n[0]  
 				: lrus_n[0];
 
 	assign lru_next[1] =
 				cacheop == 2'b00 ?
 
 					miss_occurred == 1 ? lrus_n[1]
-					: hit_way_1 == 1'b1 ? 1'b1
-						: 0'b1
+					: hit_way_1 == 1'b1 ? 1'b1 : 1'b0
 
 					: cacheop == 2'b10 ?
-						miss_way == 2'b10 ? 1'b1 : 1'b0 
+						miss_occurred == 1 ?
+							miss_way == 2'b10 ? 1'b1 : 1'b0 
+						: lrus_n[1]
 				: lrus_n[1];
 
 		// Calculate Tag values on the next write (TAG ONLY NOT LRU OR VALID)
@@ -201,11 +212,15 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 		//
 		//		Otherwise don't fill it at all
 	assign tag_next_0 = cacheop == 2'b10 ?
-				miss_way[0] == 1 ? tag_in : tag_raw_out_0	
+				miss_occurred == 1 ?
+					miss_way[0] == 1 ? tag_in : tag_raw_out_0	
+				: tag_out_0
 			   : tag_out_0;
 
 	assign tag_next_1 = cacheop == 2'b10 ?
-				miss_way[1] == 1 ? tag_in : tag_raw_out_1	
+				miss_occurred == 1 ?
+					miss_way[1] == 1 ? tag_in : tag_raw_out_1
+				: tag_out_1
 			   : tag_out_1;
 	
 	assign tag_in_full_0 = {valid_next_0, lru_next[0], tag_next_0};
