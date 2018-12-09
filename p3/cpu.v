@@ -40,6 +40,14 @@ module cpu(clk, rst_n, hlt, pc);
     wire[2:0] mem_flag, mem_flagwe;
     wire mem_MemMemForwarding;
     wire[15:0] mem_DataToBeWrittenToPR;
+    wire d_miss, i_miss;
+    wire global_stall;
+
+    assign mem_miss_stall = d_miss | i_miss;		// freeze pipeline if miss detected
+    assign global_stall = mem_miss_stall | stall;	
+
+    Memory_Controller MC(.clk(clk), .rst(rst), .d_enable(1'b0), .if_we(1'b0), .dm_we(mem_DataWe), .if_addr(pc), .dm_addr(mem_DataAddr), .if_data_out(if_inst),
+	.dm_data_out(if_inst), .if_data_in(16'h0), .dm_data_in(mem_DataWriteData), .if_miss(i_miss), .dm_miss(d_miss));
 
     wire wb_RFwe, wb_hlt;
     wire[3:0] wb_RFdst;
@@ -56,9 +64,8 @@ module cpu(clk, rst_n, hlt, pc);
     // IF stage
     assign flush = taken;
     CLAdder16 add0(pc, 16'h2, pcPlus2);
-    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall & (hlt_fetch_not_yet | hlt_fetch_state)), .P(taken?pcTarget:pcPlus2), .Q(pc));
-    InstMemory instMem(.clk(clk), .rst(rst), .enable(1'b1), .wr(1'b0), .addr(pc), .data_out(if_inst), .data_in(16'h0));
-    IFID_Pipe_Register IFID_PR(.clk(clk), .rst(rst), .WE(pc_we & ~stall), .flush(flush), .inst_next(if_inst), .inst(id_inst), .pc_in(pc), .pc_out(id_pc));
+    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~global_stall & (hlt_fetch_not_yet | hlt_fetch_state)), .P(taken?pcTarget:pcPlus2), .Q(pc));
+    IFID_Pipe_Register IFID_PR(.clk(clk), .rst(rst), .WE(pc_we & ~global_stall), .flush(flush), .inst_next(if_inst), .inst(id_inst), .pc_in(pc), .pc_out(id_pc));
 
     // ID stage, including all the control stuff
     FlagRegister flagRegister(.clk(clk), .rst(rst), .weZVN(wb_flagwe), .flagZVN_in(wb_flag), .flagZVN_out(id_flagout));
@@ -147,7 +154,6 @@ module cpu(clk, rst_n, hlt, pc);
     assign mem_DataAddr = mem_AluResult;
     ForwardToMem forwardToMem(.memSrcSel(mem_MemMemForwarding), .memSrc(mem_DataWriteSrcReg), .wbDst(wb_RFdst), .willWrite(wb_RFwe));
     assign mem_DataWriteData = mem_MemMemForwarding ? wb_RFwriteData : mem_DataWriteDataFromPR;
-    DataMemory dataMemory(.clk(clk), .rst(rst), .enable(1'b1), .wr(mem_DataWe), .addr(mem_DataAddr), .data_in(mem_DataWriteData), .data_out(mem_DataReadData));
 
     assign mem_UseAluResult = mem_inst[15:12] != 4'b1000;
     assign mem_DataToBeWrittenToPR = mem_UseAluResult ? mem_AluResult : mem_DataReadData;
