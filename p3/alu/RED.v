@@ -1,3 +1,12 @@
+/***********************
+ * ECE552 Project Phase3
+ * unit for RED instruction
+ *
+ * Authors:
+ * - Huimin      : initial implementation
+ * - Zhenghao Gu : revised implementation
+ */
+
 module RED(A, B, Reduction);
     input [15:0] A, B;
     output [15:0] Reduction;

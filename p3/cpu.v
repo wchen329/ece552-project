@@ -1,3 +1,12 @@
+/***********************
+ * ECE552 Project Phase3
+ * CPU Toplevel
+ *
+ * Authors:
+ * - Zhenghao Gu : for most of the designs
+ * - Winor Chen  : for cache related signals
+ */
+
 module cpu(clk, rst_n, hlt, pc);
     input clk, rst_n;
     output hlt;
@@ -44,7 +53,7 @@ module cpu(clk, rst_n, hlt, pc);
     wire global_stall;
 
     assign mem_miss_stall = d_miss | i_miss;		// freeze pipeline if miss detected
-    assign global_stall = mem_miss_stall | stall;	
+    assign global_stall = mem_miss_stall | stall;
 
     Memory_Controller MC(.clk(clk), .rst(rst), .d_enable(mem_inst[15:13] == 3'b100), .if_we(1'b0), .dm_we(mem_DataWe), .if_addr(pc), .dm_addr(mem_DataAddr), .if_data_out(if_inst),
 	.dm_data_out(mem_DataReadData), .if_data_in(16'h0), .dm_data_in(mem_DataWriteData), .if_miss(i_miss), .dm_miss(d_miss));

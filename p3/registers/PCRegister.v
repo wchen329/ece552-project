@@ -1,3 +1,11 @@
+/***********************
+ * ECE552 Project Phase3
+ * PC register
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
+
 module PCRegister(clk, rst, we, P, Q);
     input clk, rst, we; // posedge trigger, sync active high reset, active high write enable
     input[15:0] P; // new execution addr

@@ -1,3 +1,10 @@
+/***********************
+ * ECE552 Project Phase3
+ * MEM-EX and MEM-ID stall detector
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
 module HazardController(stall,aluSrc1, aluSrc2, brSrc, lwDst,willWrite, isBr, isUnconditional);
     output stall;
     input [3:0] aluSrc1, aluSrc2, brSrc, lwDst; // toplevel need to set these to 0 if unused

@@ -1,3 +1,11 @@
+/***********************
+ * ECE552 Project Phase3
+ * Compute the memory address
+ *
+ * Authors:
+ * - Zhenghao Gu : implementation
+ */
+
 // memAddr = (baseAddr & 0xFFFE) + (signExtended(offset) << 1)
 module MemAddrUnit(baseAddr, offset, memAddr);
     input[15:0] baseAddr; // the base address from RF

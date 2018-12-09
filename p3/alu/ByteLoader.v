@@ -1,4 +1,10 @@
-// for LLB and LHB instructions
+/***********************
+ * ECE552 Project Phase3
+ * for LLB and LHB instructions
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
 module ByteLoader(in, u, high, out);
     input[15:0] in; // 16bit input
     input[7:0] u; // the byte to be loaded

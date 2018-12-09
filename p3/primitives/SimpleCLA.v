@@ -1,4 +1,10 @@
-// CLA by Zhenghao Gu
+/***********************
+ * ECE552 Project Phase3
+ * 4/8/12/16 bit carry lookahead adder
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
 
 module CLABit(a, b, cin, p, g, s);
     input a, b, cin;

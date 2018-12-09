@@ -1,3 +1,10 @@
+/***********************
+ * ECE552 Project Phase3
+ * FLAG register
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
 module FlagRegister(clk, rst, weZVN, flagZVN_in, flagZVN_out);
     input clk, rst;       // posedge trigger, sync active high reset
     input[2:0] weZVN, flagZVN_in; // {Z,V,N} order may be changed, active high write enable, e.g. if we[2]==1, then Z will be set to flag_in[2];

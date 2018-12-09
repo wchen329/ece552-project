@@ -1,3 +1,11 @@
+/***********************
+ * ECE552 Project Phase3
+ * FLAG bits forwarding
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
+
 module flagZVN_forwarding_mux (ALU_flagZVN, IDEX_flagZVN_we, EXMEM_flagZVN, EXMEM_flagZVN_we, FR_flagZVN, flagZVN_out);
     /* construct the correct FLAG={Z,V,N} based on all pipeline registers & flag register */
     input[2:0] ALU_flagZVN, IDEX_flagZVN_we;    // flag from ALU, i.e. previous instruction

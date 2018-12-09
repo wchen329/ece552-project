@@ -1,3 +1,11 @@
+/***********************
+ * ECE552 Project Phase3
+ * Main control unit
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
+
 module ControlUnit(opcode, HLT, PCwe, RFwe, MemWE, FLAGwe, NeedBranch, ALU2Src, A2Src, DwMUX);
     input[3:0] opcode;
     output HLT, PCwe, RFwe, MemWE, NeedBranch, ALU2Src, A2Src;

@@ -1,3 +1,11 @@
+/***********************
+ * ECE552 Project Phase3
+ * Controls the forwarding MUXes
+ *
+ * Authors:
+ * - Zhenghao Gu : design & implementation
+ */
+
 module ForwardToALU(aluSrcSel,aluSrc, exDst, memDst,willExWrite, willMemWrite); // two instences is required for two alu input
     output[1:0] aluSrcSel; // 0=no forwarding; 1=from EX; 2=from MEM; 3=unused
     input[3:0] aluSrc, exDst, memDst;

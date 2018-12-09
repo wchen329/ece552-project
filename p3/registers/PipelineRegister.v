@@ -1,3 +1,12 @@
+/***********************
+ * ECE552 Project Phase3
+ * pipeline register
+ *
+ * Authors:
+ * - Zhenghao Gu : revised implementation
+ * - Winor Chen  : initial implementation
+ */
+
 module PipelineRegister(
     clk, rst, we, flush,
 
