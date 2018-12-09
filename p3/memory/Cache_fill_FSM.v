@@ -2,13 +2,14 @@
  *  
  * wchen329@wisc.edu
  */
-module Cache_fill_FSM(clk, rst_n, miss_detected, miss_address, fsm_busy, write_data_array, write_tag_array, memory_address, cache_wr_address, memory_data, memory_data_valid, EOB);
+module Cache_fill_FSM(clk, rst_n, miss_detected, miss_address, fsm_busy, write_data_array, write_tag_array, memory_address, cache_wr_address, memory_data, memory_data_valid, arb_force_reset, EOB);
 
 input clk, rst_n;
 input miss_detected;
 input [15:0] miss_address;
 input [15:0] memory_data;
 input memory_data_valid;
+input arb_force_reset;
 
 output fsm_busy;
 output write_data_array;
@@ -28,8 +29,8 @@ wire [15:0] current_address_plus_two, current_address_plus_two_c;
 
 // Implementation Detail
 
-Register_4bit COUNT_REG(clk, ~miss_detected | ~rst_n | (count_reg_Q == 8), count_reg_D , (count_reg_Q != 8) & (memory_data_valid), 1'b1, 1'b0, count_reg_Q, ); // holds the current "count state"
-Register_4bit ADDR_COUNT_REG(clk, ~miss_detected | ~rst_n, addr_creg_D , (addr_creg_Q != 8), 1'b1, 1'b0, addr_creg_Q, ); // hold the count of how many address increments were made
+Register_4bit COUNT_REG(clk, ~miss_detected | ~rst_n | (count_reg_Q == 8) | arb_force_reset, count_reg_D , (count_reg_Q != 8) & (memory_data_valid), 1'b1, 1'b0, count_reg_Q, ); // holds the current "count state"
+Register_4bit ADDR_COUNT_REG(clk, ~miss_detected | ~rst_n | arb_force_reset, addr_creg_D, (addr_creg_Q != 9), 1'b1, 1'b0, addr_creg_Q, ); // hold the count of how many address increments were made
 Register WORKING_ADDRESS(clk, ~miss_detected | ~rst_n, next_address, 1'b1, 1'b1, 1'b0, current_address);
 Register WORKING_ADDRESS_FOR_CACHE(clk, ~miss_detected | ~rst_n, next_address_c, 1'b1, 1'b1, 1'b0, current_address_c);
 
@@ -51,7 +52,7 @@ assign next_address_c = (addr_creg_Q == 0) ? base_address :
 			: current_address_c;
 
 assign mem_read_done = (addr_creg_Q == 9) ? 1 : 0;
-assign EOB = mem_read_done | (addr_creg_Q == 0);
+assign EOB = (mem_read_done | (addr_creg_Q == 0));
 
 // Assign state outputs
 assign write_tag_array = (count_reg_Q == 8) ? 1 : 0;
