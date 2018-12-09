@@ -1,0 +1,9 @@
+	LHB R1, 0x10
+	LHB R2, 0x20
+	LHB R3, 0x30
+	Lw R4, R1, 0
+	LW R5, R1, 0
+	LW R6, R2, 0
+	LW R7, R2, 0
+	LW R8, R3, 0
+	HLT	
