@@ -59,7 +59,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire fsm_data_fill;
 	wire fsm_tag_fill;
 	wire fsm_working;
-	wire fsm_store_valid;	// a special flag which keeps the FSM running when a store operation has reached the correct word
+	wire fsm_store_update;	// a special flag which keeps the FSM running when a store operation has reached the correct word
 
 	// Two caches, I-cache, D-cache
 	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state_0), .Data_In(I_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
