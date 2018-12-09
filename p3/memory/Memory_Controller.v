@@ -69,7 +69,8 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 
 	assign mm_out = ~(|miss_states & ~mm_ren) ? {16{1'b0}} : {16{1'bz}};
 	assign if_data_out = if_miss ? {16{1'b0}} : {16{1'bz}};
-	assign dm_data_out = dm_miss ? {16{1'b0}} : {16{1'bz}};
+	assign dm_data_out = dm_miss ? {16{1'b0}} :
+				~d_enable ? {16{1'b0}} : {16{1'bz}};
 
 	// Define Fill FSM
 	assign I_word_index = if_miss ?

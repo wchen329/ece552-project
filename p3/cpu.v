@@ -46,8 +46,8 @@ module cpu(clk, rst_n, hlt, pc);
     assign mem_miss_stall = d_miss | i_miss;		// freeze pipeline if miss detected
     assign global_stall = mem_miss_stall | stall;	
 
-    Memory_Controller MC(.clk(clk), .rst(rst), .d_enable(1'b0), .if_we(1'b0), .dm_we(mem_DataWe), .if_addr(pc), .dm_addr(mem_DataAddr), .if_data_out(if_inst),
-	.dm_data_out(if_inst), .if_data_in(16'h0), .dm_data_in(mem_DataWriteData), .if_miss(i_miss), .dm_miss(d_miss));
+    Memory_Controller MC(.clk(clk), .rst(rst), .d_enable(mem_inst[15:13] == 3'b100), .if_we(1'b0), .dm_we(mem_DataWe), .if_addr(pc), .dm_addr(mem_DataAddr), .if_data_out(if_inst),
+	.dm_data_out(mem_DataReadData), .if_data_in(16'h0), .dm_data_in(mem_DataWriteData), .if_miss(i_miss), .dm_miss(d_miss));
 
     wire wb_RFwe, wb_hlt;
     wire[3:0] wb_RFdst;
@@ -64,8 +64,8 @@ module cpu(clk, rst_n, hlt, pc);
     // IF stage
     assign flush = taken;
     CLAdder16 add0(pc, 16'h2, pcPlus2);
-    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~global_stall & (hlt_fetch_not_yet | hlt_fetch_state)), .P(taken?pcTarget:pcPlus2), .Q(pc));
-    IFID_Pipe_Register IFID_PR(.clk(clk), .rst(rst), .WE(pc_we & ~global_stall), .flush(flush), .inst_next(if_inst), .inst(id_inst), .pc_in(pc), .pc_out(id_pc));
+    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall & (hlt_fetch_not_yet | hlt_fetch_state) & ~mem_miss_stall), .P(taken?pcTarget:pcPlus2), .Q(pc));
+    IFID_Pipe_Register IFID_PR(.clk(clk), .rst(rst), .WE(pc_we & ~stall & ~mem_miss_stall ), .flush(flush), .inst_next(if_inst), .inst(id_inst), .pc_in(pc), .pc_out(id_pc));
 
     // ID stage, including all the control stuff
     FlagRegister flagRegister(.clk(clk), .rst(rst), .weZVN(wb_flagwe), .flagZVN_in(wb_flag), .flagZVN_out(id_flagout));
@@ -103,7 +103,7 @@ module cpu(clk, rst_n, hlt, pc);
 
 
     PipelineRegister idex(
-        .clk(clk), .rst(rst), .we(1'b1), .flush(stall),
+        .clk(clk), .rst(rst), .we(~mem_miss_stall), .flush(stall),
         .hlt_in(id_hlt), .hlt_ou(ex_hlt),
         .RFwe_in(id_RFwe), .RFwe_ou(ex_RFwe),
         .RFdst_in(id_RFdst), .RFdst_ou(ex_RFdst),
@@ -137,7 +137,7 @@ module cpu(clk, rst_n, hlt, pc);
     assign ex_resultToPR = (ex_inst[15:12]==4'b1110) ? ex_pcplus2 : ex_aluout;
 
     PipelineRegister exmem(
-        .clk(clk), .rst(rst), .we(1'b1), .flush(1'b0),
+        .clk(clk), .rst(rst), .we(~mem_miss_stall), .flush(1'b0),
         .hlt_in(ex_hlt), .hlt_ou(mem_hlt),
         .RFwe_in(ex_RFwe), .RFwe_ou(mem_RFwe),
         .RFdst_in(ex_RFdst), .RFdst_ou(mem_RFdst),
@@ -159,7 +159,7 @@ module cpu(clk, rst_n, hlt, pc);
     assign mem_DataToBeWrittenToPR = mem_UseAluResult ? mem_AluResult : mem_DataReadData;
 
     PipelineRegister memwb(
-        .clk(clk), .rst(rst), .we(1'b1), .flush(1'b0),
+        .clk(clk), .rst(rst), .we(~mem_miss_stall), .flush(1'b0),
         .hlt_in(mem_hlt), .hlt_ou(wb_hlt),
         .RFwe_in(mem_RFwe), .RFwe_ou(wb_RFwe),
         .RFdst_in(mem_RFdst), .RFdst_ou(wb_RFdst),
