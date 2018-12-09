@@ -67,6 +67,10 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	// THE Main Memory Module
 	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(working_address), .enable(|miss_states & ~mm_ren), .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
+	assign mm_out = ~(|miss_states & ~mm_ren) ? {16{1'b0}} : {16{1'bz}};
+	assign if_data_out = if_miss ? {16{1'b0}} : {16{1'bz}};
+	assign dm_data_out = dm_miss ? {16{1'b0}} : {16{1'bz}};
+
 	// Define Fill FSM
 	assign I_word_index = if_miss ?
 					fsm_data_fill == 1 ? work_addr_cache[3:0] : if_addr[3:0]
