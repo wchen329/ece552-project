@@ -59,13 +59,18 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire fsm_data_fill;
 	wire fsm_tag_fill;
 	wire fsm_working;
+	wire fsm_store_valid;	// a special flag which keeps the FSM running when a store operation has reached the correct word
 
 	// Two caches, I-cache, D-cache
 	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state_0), .Data_In(I_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
 	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(fsm_state_1), .Data_In(D_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
 
 	// THE Main Memory Module
-	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(working_address), .enable(|miss_states & ~mm_ren), .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(working_address), .enable(|miss_states & ~mm_ren), .wr(fsm_store_update), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+
+	assign fsm_store_update = store ?
+					dm_addr[3:0] == work_addr_cache[3:0] ? 1 : 0
+				: 0;
 
 	assign mm_out = ~(|miss_states & ~mm_ren) ? {16{1'b0}} : {16{1'bz}};
 	assign if_data_out = if_miss ? {16{1'b0}} : {16{1'bz}};
@@ -91,7 +96,10 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 				: if_data_out;
 		
 	assign D_data_in =	dm_miss ?
-					store ? dm_data_in : mm_out 
+					store ? 
+						fsm_store_update ? dm_data_in
+						: mm_out 
+					: mm_out 
 				: dm_data_out; 
 
 	assign I_cache_addr_in = { if_addr[15:4], I_word_index };
@@ -123,8 +131,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	// DRIVING == 1 ? I-cache and I-bus drives : D-cache and D-bus drives
 	assign fsm_address_in	= driving == 1 ? if_addr : dm_addr;	// select correct address depending on what's driving the fsm (DATA or IF?)
 	assign mm_addr = fsm_address_in;
-
-	assign store = if_we | dm_we;
+	assign store = dm_we;
 
 	// NOTE: this signal may not be needed?
 	assign fsm_data_in 	= 	store ?
@@ -135,7 +142,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 
 	// FSM declaration
 	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~(~fsm_active | rst)), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
-		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .cache_wr_address(work_addr_cache), .memory_data(fsm_data_in), .memory_data_valid(valid_data_state), .EOB(mm_ren));
+		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .cache_wr_address(work_addr_cache), .memory_data(fsm_data_in), .memory_data_valid(valid_data_state | fsm_store_update), .EOB(mm_ren));
 
 
 endmodule
