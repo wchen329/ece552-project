@@ -62,13 +62,16 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire fsm_working;
 	wire fsm_store_update;	// a special flag which keeps the FSM running when a store operation has reached the correct word
 	wire arb_hammer;
+	wire update_enable;
 
 	// Two caches, I-cache, D-cache
 	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state_0), .Data_In(I_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
 	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(fsm_state_1), .Data_In(D_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
 
 	// THE Main Memory Module
-	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(work_and_store_address), .enable(|miss_states & ~mm_ren), .wr(miss_states == 2'b01 & store & fsm_tag_fill), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(work_and_store_address), .enable((|miss_states & ~mm_ren) | update_enable), .wr(update_enable), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+
+	assign update_enable = miss_states == 2'b01 & store & fsm_tag_fill;
 
 	assign fsm_store_update = store ?
 					fsm_data_fill == 1 ?
