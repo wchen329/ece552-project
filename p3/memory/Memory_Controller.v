@@ -36,7 +36,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire [15:0] mm_out;
 	wire [15:0] mm_addr;
 	wire [1:0] miss_states;
-	wire [1:0] fsm_state, fsm_state_0, fsm_state_1;
+	wire [1:0] fsm_state, fsm_state_0, fsm_state_1, cacheop_1;
 	wire fsm_active;
 	wire mm_ren;
 	wire store;
@@ -63,14 +63,16 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire fsm_store_update;	// a special flag which keeps the FSM running when a store operation has reached the correct word
 	wire arb_hammer;
 	wire update_enable;
+	wire store_data_hit_enable;
 
 	// Two caches, I-cache, D-cache
 	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state_0), .Data_In(I_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
-	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(fsm_state_1), .Data_In(D_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
+	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(cacheop_1), .Data_In(D_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
 
 	// THE Main Memory Module
-	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(work_and_store_address), .enable((|miss_states & ~mm_ren) | update_enable), .wr(update_enable), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(work_and_store_address), .enable((|miss_states & ~mm_ren) | update_enable | store_data_hit_enable), .wr(update_enable | store_data_hit_enable), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
+	assign store_data_hit_enable = store & ~fsm_active;
 	assign update_enable = miss_states == 2'b01 & store & fsm_tag_fill;
 
 	assign fsm_store_update = store ?
@@ -79,6 +81,8 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 					: 0
 				: 0;
 
+	assign cacheop_1 = store_data_hit_enable ? 2'b01 : fsm_state_1;
+
 	assign work_and_store_address =
 		miss_states == 2'b01 ?				
 			store ?
@@ -86,7 +90,9 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 					fsm_address_in
 				: working_address
 			: working_address
-		: working_address;
+		:
+
+		store_data_hit_enable ? dm_addr : working_address;
 
 	//assign mm_out = ~(|miss_states & ~mm_ren) ? {16{1'b0}} : {16{1'bz}};
 	assign if_data_out = if_miss ? {16{1'b0}} : {16{1'bz}};
@@ -113,10 +119,11 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 		
 	assign D_data_in =	dm_miss ?
 					store ? 
-						fsm_store_update ? dm_data_in
-						: mm_out 
-					: mm_out 
-				: dm_data_out; 
+						fsm_store_update ? dm_data_in : mm_out
+					: mm_out
+				:
+
+				store_data_hit_enable ? dm_data_in : dm_data_out; 
 
 	assign I_cache_addr_in = { if_addr[15:4], I_word_index };
 	assign D_cache_addr_in = { dm_addr[15:4], D_word_index };
