@@ -38,6 +38,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire [1:0] miss_states;
 	wire [1:0] fsm_state, fsm_state_0, fsm_state_1;
 	wire fsm_active;
+	wire mm_ren;
 	wire store;
 	wire driving;
 	wire valid_data_state;
@@ -53,7 +54,8 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	// Wires specificially for driving the FSM
 	wire [15:0] fsm_address_in;
 	wire [15:0] fsm_data_in;
-	wire [15:0] working_address;
+	wire [15:0] working_address; // address FOR MEMORY ONLY
+	wire [15:0] work_addr_cache;
 	wire fsm_data_fill;
 	wire fsm_tag_fill;
 	wire fsm_working;
@@ -63,15 +65,15 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(fsm_state_1), .Data_In(D_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
 
 	// THE Main Memory Module
-	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(working_address), .enable(1'b1), .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(working_address), .enable(|miss_states & ~mm_ren), .wr(store), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
 	// Define Fill FSM
 	assign I_word_index = if_miss ?
-					fsm_data_fill == 1 ? working_address[3:0] : if_addr[3:0]
+					fsm_data_fill == 1 ? work_addr_cache[3:0] : if_addr[3:0]
 				: if_addr[3:0];
 
 	assign D_word_index = dm_miss ?
-					fsm_data_fill == 1 ? working_address[3:0] : dm_addr[3:0]
+					fsm_data_fill == 1 ? work_addr_cache[3:0] : dm_addr[3:0]
 				: dm_addr[3:0];
 
 	// If not missing, don't write to the cache (i.e. write cache with what's already in there)!
@@ -128,7 +130,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 
 	// FSM declaration
 	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~(~fsm_active | rst)), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
-		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .memory_data(fsm_data_in), .memory_data_valid(valid_data_state));
+		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .cache_wr_address(work_addr_cache), .memory_data(fsm_data_in), .memory_data_valid(valid_data_state), .EOB(mm_ren));
 
 
 endmodule
