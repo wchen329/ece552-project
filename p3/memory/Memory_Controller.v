@@ -60,6 +60,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire fsm_tag_fill;
 	wire fsm_working;
 	wire fsm_store_update;	// a special flag which keeps the FSM running when a store operation has reached the correct word
+	wire arb_hammer;
 
 	// Two caches, I-cache, D-cache
 	Cache_Toplevel I_CACHE(.clk(clk), .rst(rst), .Address_Oper(I_cache_addr_in) , .r_enabled(1'b1), .cacheop(fsm_state_0), .Data_In(I_data_in), .Data_Out(if_data_out), .miss_occurred(if_miss));
@@ -137,12 +138,15 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	assign fsm_data_in 	= 	store ?
 						driving == 1 ? if_data_in : dm_data_in	// select correct data depending on what's driving the fsm
 					: mm_out;
+	assign arb_hammer = miss_states == 2'b11 ?
+				fsm_tag_fill == 1 ? 1 : 0
+			: 2'b00;
 
 	assign mm_in	=	driving == 1 ? if_data_in : dm_data_in;
 
 	// FSM declaration
 	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~(~fsm_active | rst)), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
-		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .cache_wr_address(work_addr_cache), .memory_data(fsm_data_in), .memory_data_valid(valid_data_state | fsm_store_update), .EOB(mm_ren));
+		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .cache_wr_address(work_addr_cache), .memory_data(fsm_data_in), .arb_force_reset(arb_hammer), .memory_data_valid(valid_data_state | fsm_store_update), .EOB(mm_ren));
 
 
 endmodule
