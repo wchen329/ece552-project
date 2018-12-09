@@ -55,6 +55,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	wire [15:0] fsm_address_in;
 	wire [15:0] fsm_data_in;
 	wire [15:0] working_address; // address FOR MEMORY ONLY
+	wire [15:0] work_and_store_address;
 	wire [15:0] work_addr_cache;
 	wire fsm_data_fill;
 	wire fsm_tag_fill;
@@ -67,11 +68,22 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	Cache_Toplevel D_CACHE(.clk(clk), .rst(rst), .Address_Oper(D_cache_addr_in) , .r_enabled(d_enable), .cacheop(fsm_state_1), .Data_In(D_data_in), .Data_Out(dm_data_out), .miss_occurred(dm_miss));
 
 	// THE Main Memory Module
-	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(working_address), .enable(|miss_states & ~mm_ren), .wr(fsm_store_update), .clk(clk), .rst(rst), .data_valid(valid_data_state));
+	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(work_and_store_address), .enable(|miss_states & ~mm_ren), .wr(miss_states == 2'b01 & store & fsm_tag_fill), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
 	assign fsm_store_update = store ?
-					dm_addr[3:0] == work_addr_cache[3:0] ? 1 : 0
+					fsm_data_fill == 1 ?
+						dm_addr[3:0] == work_addr_cache[3:0] ? 1 : 0
+					: 0
 				: 0;
+
+	assign work_and_store_address =
+		miss_states == 2'b01 ?				
+			store ?
+				fsm_tag_fill ?
+					fsm_address_in
+				: working_address
+			: working_address
+		: working_address;
 
 	//assign mm_out = ~(|miss_states & ~mm_ren) ? {16{1'b0}} : {16{1'bz}};
 	assign if_data_out = if_miss ? {16{1'b0}} : {16{1'bz}};
@@ -146,7 +158,7 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 
 	// FSM declaration
 	Cache_fill_FSM FILL_FSM(.clk(clk), .rst_n(~(~fsm_active | rst)), .miss_detected(fsm_active), .miss_address(fsm_address_in), .fsm_busy(fsm_working), .write_data_array(fsm_data_fill), 
-		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .cache_wr_address(work_addr_cache), .memory_data(fsm_data_in), .arb_force_reset(arb_hammer), .memory_data_valid(valid_data_state | fsm_store_update), .EOB(mm_ren));
+		.write_tag_array(fsm_tag_fill), .memory_address(working_address), .cache_wr_address(work_addr_cache), .memory_data(fsm_data_in), .arb_force_reset(arb_hammer), .memory_data_valid(valid_data_state), .EOB(mm_ren));
 
 
 endmodule
