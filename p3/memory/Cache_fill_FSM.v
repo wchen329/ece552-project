@@ -46,12 +46,12 @@ assign base_address = {miss_address[15:4], {4'b0000}};
 
 // Assign state
 assign next_address = (addr_creg_Q == 0) ? base_address : current_address_plus_two;
-assign next_address_c = (count_reg_Q == 0) ? base_address :
+assign next_address_c = (addr_creg_Q == 0) ? base_address :
 			(memory_data_valid) ? current_address_plus_two_c
 			: current_address_c;
 
-assign mem_read_done = (addr_creg_Q == 8) ? 1 : 0;
-assign EOB = mem_read_done;
+assign mem_read_done = (addr_creg_Q == 9) ? 1 : 0;
+assign EOB = mem_read_done | (addr_creg_Q == 0);
 
 // Assign state outputs
 assign write_tag_array = (count_reg_Q == 8) ? 1 : 0;
