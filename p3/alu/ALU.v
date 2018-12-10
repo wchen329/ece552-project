@@ -33,11 +33,11 @@ module ALU_no_check(A, B, op, out, flags);
 	wire out_Z, out_V, out_N;
 
 	// ALU Sub Modules
-	addsub_16bit_cla ADDSUB(add_out, out_V, A, B, op[0]);
-	xor_16bit XOR(xor_out, A, B);
-	PADDSB_16bit_cla PADDSB(paddsb_out, A, B);
-	Shifter SSLSRAROR(shift_out, A, B[3:0], op);
-	RED REDUCTION(A, B, red_out);
+	addsub_16bit_cla ADDSUB(.Sum(add_out), .Ovfl(out_V), .A(A), .B(B), .Sub(op[0]));
+	xor_16bit XOR(.Output(xor_out), .In_One(A), .In_Two(B));
+	PADDSB_16bit_cla PADDSB(.Sum(paddsb_out), .A(A), .B(B));
+	Shifter SSLSRAROR(.Shift_Out(shift_out), .Shift_In(A), .Shift_Val(B[3:0]), .Opcode(op));
+	RED REDUCTION(.A(A), .B(B), .Reduction(red_out));
 
 	assign out =
 	op == 0 ? add_out :

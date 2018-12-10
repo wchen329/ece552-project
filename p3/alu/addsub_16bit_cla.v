@@ -21,8 +21,8 @@ module addsub_4bit_cla(Sum, A, B, Sub);
 	assign B_1s = ~ B;
 
 	// Now evaluate addition and subtraction
-	adder_4bit_cla_simple ADD( , , sum_add, A, B, 1'b0);
-	adder_4bit_cla_simple SUB( , , sum_sub, A, B_1s, 1'b1);
+	adder_4bit_cla_simple ADD (.Propagate(), .Generate(), .Sum(sum_add), .A(A), .B(B), .Cin(1'b0));
+	adder_4bit_cla_simple SUB (.Propagate(), .Generate(), .Sum(sum_sub), .A(A), .B(B_1s), .Cin(1'b1));
 
 	// Choose non sat output based off of sub flag;
 	assign Sum_non_sat = Sub == 0 ? sum_add : sum_sub;
@@ -71,10 +71,12 @@ module addsub_16bit_cla(Sum, Ovfl, A, B, Sub);
 
 
 	// Add A, B together, calculate operation
-	adder_4bit_cla_simple BLOCK_0 (p[0], g[0], Inter_Sum[3:0], A[3:0], B_operating[3:0], Cin_operating);
-	adder_4bit_cla_simple BLOCK_1 (p[1], g[1], Inter_Sum[7:4], A[7:4], B_operating[7:4], g[0] | (p[0] & Cin_operating));
-	adder_4bit_cla_simple BLOCK_2 (p[2], g[2], Inter_Sum[11:8], A[11:8], B_operating[11:8], g[1] | (p[1] & (g[0] | (p[0] & Cin_operating))));
-	adder_4bit_cla_simple BLOCK_3 (, g[3], Inter_Sum[15:12], A[15:12], B_operating[15:12], g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & Cin_operating))))));
+	adder_4bit_cla_simple BLOCK_0 (.Propagate(p[0]), .Generate(g[0]), .Sum(Inter_Sum[3:0]), .A(A[3:0]), .B(B_operating[3:0]), .Cin(Cin_operating));
+	adder_4bit_cla_simple BLOCK_1 (.Propagate(p[1]), .Generate(g[1]), .Sum(Inter_Sum[7:4]), .A(A[7:4]), .B(B_operating[7:4]), .Cin(g[0] | (p[0] & Cin_operating)));
+	adder_4bit_cla_simple BLOCK_2 (.Propagate(p[2]), .Generate(g[2]), .Sum(Inter_Sum[11:8]), .A(A[11:8]), .B(B_operating[11:8]), .Cin(g[1] | (p[1] & (g[0] | (p[0] & Cin_operating)))));
+	adder_4bit_cla_simple BLOCK_3 (.Propagate(), .Generate(g[3]), .Sum(Inter_Sum[15:12]), .A(A[15:12]), .B(B_operating[15:12]), .Cin(g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & Cin_operating)))))));
+
+
 
 	// Now multiplex output depending on whether saturation occurred or not
 	assign Sum =

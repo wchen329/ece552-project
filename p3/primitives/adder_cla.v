@@ -44,16 +44,16 @@ module adder_4bit_cla_simple(Propagate, Generate, Sum, A, B, Cin);
 	wire [3:0] p, g;
 	wire msb_cin, msb_cout, msb_pos_cin;
 
-	adder_1bit_cla_unit SIG_0(p[0], g[0], A[0], B[0]);
-	adder_1bit_cla_unit SIG_1(p[1], g[1], A[1], B[1]);
-	adder_1bit_cla_unit SIG_2(p[2], g[2], A[2], B[2]);
-	adder_1bit_cla_unit SIG_3(p[3], g[3], A[3], B[3]);
+	adder_1bit_cla_unit SIG_0(.Propagate(p[0]), .Generate(g[0]), .A(A[0]), .B(B[0]));
+	adder_1bit_cla_unit SIG_1(.Propagate(p[1]), .Generate(g[1]), .A(A[1]), .B(B[1]));
+	adder_1bit_cla_unit SIG_2(.Propagate(p[2]), .Generate(g[2]), .A(A[2]), .B(B[2]));
+	adder_1bit_cla_unit SIG_3(.Propagate(p[3]), .Generate(g[3]), .A(A[3]), .B(B[3]));
 
 	// Add
-	adder_1bit_partial SUM_0(Sum[0], A[0], B[0], Cin);
-	adder_1bit_partial SUM_1(Sum[1], A[1], B[1], g[0] | (p[0] & Cin));
-	adder_1bit_partial SUM_2(Sum[2], A[2], B[2], g[1] | (p[1] & (g[0] | (p[0] & Cin))));
-	adder_1bit_partial SUM_3(Sum[3], A[3], B[3], g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & Cin))))));
+	adder_1bit_partial SUM_0(.Sum(Sum[0]), .A(A[0]), .B(B[0]), .Cin(Cin));
+	adder_1bit_partial SUM_1(.Sum(Sum[1]), .A(A[1]), .B(B[1]), .Cin(g[0] | (p[0] & Cin)));
+	adder_1bit_partial SUM_2(.Sum(Sum[2]), .A(A[2]), .B(B[2]), .Cin(g[1] | (p[1] & (g[0] | (p[0] & Cin)))));
+	adder_1bit_partial SUM_3(.Sum(Sum[3]), .A(A[3]), .B(B[3]), .Cin(g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & Cin)))))));
 
 	// Calculate Generate
 	assign Generate = (A[3] & B[3]) | ((A[3] | B[3]) & ((A[2] & B[2]) | ((A[2] | B[2]) & ((A[1] & B[1]) | ((A[1] | B[1]) & (A[0] & B[0]))))));
@@ -76,8 +76,8 @@ module adder_8bit_cla_simple(Sum, A, B);
 	wire [1:0] p, g;
 
 	// Add A, B together, calculate operation
-	adder_4bit_cla_simple BLOCK_0 (p[0], g[0], Sum[3:0], A[3:0], B[3:0], 1'b0);
-	adder_4bit_cla_simple BLOCK_1 (p[1], g[1], Sum[7:4], A[7:4], B[7:4], g[0]);
+	adder_4bit_cla_simple BLOCK_0 (.Propagate(p[0]), .Generate(g[0]), .Sum(Sum[3:0]), .A(A[3:0]), .B(B[3:0]), .Cin(1'b0));
+	adder_4bit_cla_simple BLOCK_1 (.Propagate(p[1]), .Generate(g[1]), .Sum(Sum[7:4]), .A(A[7:4]), .B(B[7:4]), .Cin(g[0]));
 
 endmodule
 
@@ -94,9 +94,9 @@ module adder_16bit_cla_simple(Sum, A, B);
 	wire [3:0] p, g;
 
 	// Add A, B together, calculate operation
-	adder_4bit_cla_simple BLOCK_0 (p[0], g[0], Sum[3:0], A[3:0], B[3:0], 1'b0);
-	adder_4bit_cla_simple BLOCK_1 (p[1], g[1], Sum[7:4], A[7:4], B[7:4], g[0]);
-	adder_4bit_cla_simple BLOCK_2 (p[2], g[2], Sum[11:8], A[11:8], B[11:8], g[1] | (p[1] & (g[0] )));
-	adder_4bit_cla_simple BLOCK_3 (, g[3], Sum[15:12], A[15:12], B[15:12], g[2] | (p[2] & (g[1] | (p[1] & (g[0])))));
+	adder_4bit_cla_simple BLOCK_0 (.Propagate(p[0]), .Generate(g[0]), .Sum(Sum[3:0]), .A(A[3:0]), .B(B[3:0]), .Cin(1'b0));
+	adder_4bit_cla_simple BLOCK_1 (.Propagate(p[1]), .Generate(g[1]), .Sum(Sum[7:4]), .A(A[7:4]), .B(B[7:4]), .Cin(g[0]));
+	adder_4bit_cla_simple BLOCK_2 (.Propagate(p[2]), .Generate(g[2]), .Sum(Sum[11:8]), .A(A[11:8]), .B(B[11:8]), .Cin(g[1] | (p[1] & (g[0] ))));
+	adder_4bit_cla_simple BLOCK_3 (.Propagate(), .Generate(g[3]), .Sum(Sum[15:12]), .A(A[15:12]), .B(B[15:12]), .Cin(g[2] | (p[2] & (g[1] | (p[1] & (g[0]))))));
 
 endmodule
