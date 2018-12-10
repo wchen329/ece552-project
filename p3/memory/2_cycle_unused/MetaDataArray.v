@@ -1,10 +1,10 @@
-//Tag Array of 64  blocks
+//Tag Array of 128  blocks
 //Each block will have 1 byte
 //BlockEnable is one-hot
 //WriteEnable is one on writes and zero on reads
 
-module MetaDataArray(input clk, input rst, input [7:0] DataIn, input Write, input [63:0] BlockEnable, output [7:0] DataOut);
-	MBlock Mblk[63:0]( .clk(clk), .rst(rst), .Din(DataIn), .WriteEnable(Write), .Enable(BlockEnable), .Dout(DataOut));
+module MetaDataArray(input clk, input rst, input [7:0] DataIn, input Write, input [127:0] BlockEnable, output [7:0] DataOut);
+	MBlock Mblk[127:0]( .clk(clk), .rst(rst), .Din(DataIn), .WriteEnable(Write), .Enable(BlockEnable), .Dout(DataOut));
 endmodule
 
 module MBlock( input clk,  input rst, input [7:0] Din, input WriteEnable, input Enable, output [7:0] Dout);
@@ -13,9 +13,7 @@ endmodule
 
 module MCell( input clk,  input rst, input Din, input WriteEnable, input Enable, output Dout);
 	wire q;
-	assign Dout = (Enable) ? q:'bz;
+	assign Dout = (Enable & ~WriteEnable) ? q:'bz;
 	dff dffm(.q(q), .d(Din), .wen(Enable & WriteEnable), .clk(clk), .rst(rst));
 endmodule
-
-// get outta here with that inability to read same cycle, who do you think you are
 

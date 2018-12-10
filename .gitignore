@@ -2,6 +2,7 @@
 *.qdb
 *.log
 *.qpg
+*.do
 *.qtl
 *.wlf
 *.mti
