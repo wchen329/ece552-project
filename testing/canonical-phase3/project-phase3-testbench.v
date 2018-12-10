@@ -184,7 +184,7 @@ module cpu_ptb();
    assign WriteData = DUT.wb_RFwriteData;
    // If above is true, this should hold the Data being written to the register. (16 bits)
    
-   assign MemRead = DUT.MC.MAIN_MEMORY.enable;
+   assign MemRead = DUT.mem_inst[15:12]==4'b1000; //DUT.MC.MAIN_MEMORY.enable;
    // Is memory being read from, in this cycle. one bit signal (1 means yes, 0 means no)
    
    assign MemWrite = DUT.mem_DataWe;

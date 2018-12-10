@@ -103,7 +103,7 @@ module cpu(clk, rst_n, hlt, pc);
 
 
     PipelineRegister idex(
-        .clk(clk), .rst(rst), .we(~mem_miss_stall), .flush(stall),
+        .clk(clk), .rst(rst), .we(~mem_miss_stall), .flush(stall & ~mem_miss_stall),
         .hlt_in(id_hlt), .hlt_ou(ex_hlt),
         .RFwe_in(id_RFwe), .RFwe_ou(ex_RFwe),
         .RFdst_in(id_RFdst), .RFdst_ou(ex_RFdst),
@@ -136,6 +136,26 @@ module cpu(clk, rst_n, hlt, pc);
     CLAdder16 add1(ex_pc, 16'h0002, ex_pcplus2);
     assign ex_resultToPR = (ex_inst[15:12]==4'b1110) ? ex_pcplus2 : ex_aluout;
 
+    // Enable special MEM-EX forwarding path for stores only. It boils down to the following conditions:
+	// First,  storing?
+	// is the Register number storing non 0?
+	// is the Register being stored the same as the one the store data read from?
+	// Then FORWARD.
+    wire ex_mem_xx_sw;
+    wire [15:0] mem_RFout2_in;
+
+    assign ex_mem_xx_sw = ex_inst[15:12] == 4'b1001 ?
+				wb_RFwe == 1 ?
+					wb_RFdst != 4'b000 ?
+						ex_RFsrc2 == wb_RFdst?
+							1'b1
+						: 1'b0
+					: 1'b0
+				: 1'b0
+			: 1'b0;
+
+    assign mem_RFout2_in = ex_mem_xx_sw ? wb_RFwriteData : ex_RFout2;
+
     PipelineRegister exmem(
         .clk(clk), .rst(rst), .we(~mem_miss_stall), .flush(1'b0),
         .hlt_in(ex_hlt), .hlt_ou(mem_hlt),
@@ -146,9 +166,10 @@ module cpu(clk, rst_n, hlt, pc);
         .DataWE_in(ex_DataWe), .DataWE_ou(mem_DataWe),
         .inst_in(ex_inst), .inst_ou(mem_inst),
         .gppr1_in(ex_resultToPR), .gppr1_ou(mem_AluResult),
-        .gppr2_in(ex_RFout2), .gppr2_ou(mem_DataWriteDataFromPR),
+        .gppr2_in(mem_RFout2_in), .gppr2_ou(mem_DataWriteDataFromPR),
         .gppr3_in(ex_RFsrc2), .gppr3_ou(mem_DataWriteSrcReg)
     );
+
 
     // MEM stage
     assign mem_DataAddr = mem_AluResult;
