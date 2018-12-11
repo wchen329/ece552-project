@@ -98,7 +98,7 @@ module cpu(clk, rst_n, hlt, pc);
     assign id_RFdst = id_inst[11:8];
     ControlUnit ctrl(.opcode(id_inst[15:12]), .HLT(id_hlt),
         .PCwe(pc_we), .RFwe(id_RFwe), .MemWE(id_DataWe), .FLAGwe(id_flagwe),
-        .ALU2Src(id_ALU2Src), .A2Src(id_A2Src));
+        .ALU2Src(id_ALU2Src), .A2Src(id_A2Src), .NeedBranch(), .DwMUX());
     assign id_ALU1Src = id_inst[15:13] == 3'b101;
 
 
@@ -116,7 +116,7 @@ module cpu(clk, rst_n, hlt, pc);
         .gppr1_in(id_RFout1), .gppr1_ou(ex_RFout1),
         .gppr2_in(id_RFout2), .gppr2_ou(ex_RFout2),
         .gppr3_in(id_RFsrc1), .gppr3_ou(ex_RFsrc1),
-        .gppr4_in(id_RFsrc2), .gppr4_ou(ex_RFsrc2)
+        .gppr4_in(id_RFsrc2), .gppr4_ou(ex_RFsrc2), .flag_in(3'b000), .flag_ou()
     );
 
     // EX stage
