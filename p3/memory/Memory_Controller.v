@@ -72,6 +72,8 @@ module Memory_Controller(clk, rst, if_we, dm_we, d_enable, if_addr, dm_addr,
 	// THE Main Memory Module
 	memory4c MAIN_MEMORY(.data_out(mm_out), .data_in(mm_in), .addr(work_and_store_address), .enable((|miss_states & ~mm_ren) | update_enable | store_data_hit_enable), .wr(update_enable | store_data_hit_enable), .clk(clk), .rst(rst), .data_valid(valid_data_state));
 
+	assign dm_data_out = cacheop_1 == 2'b01 ? {16{1'b0}} : {16{1'bz}};
+
 	assign store_data_hit_enable = store & ~fsm_active;
 	assign update_enable = miss_states == 2'b01 & store & fsm_tag_fill;
 
