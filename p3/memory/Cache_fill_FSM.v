@@ -19,7 +19,6 @@ output EOB;
 
 // Register Wires
 wire [3:0] count_reg_D, count_reg_Q, addr_creg_D, addr_creg_Q;
-wire	fsm_active;
 wire [15:0] base_address; // address with 0 offset
 wire [15:0] current_address;	// base address for miss handling. First, fetch from bit offset 0, then 2, 4, 6, 8, 10, 12, 14.
 wire [15:0] next_address; // next address state
@@ -35,8 +34,8 @@ Register WORKING_ADDRESS(clk, ~miss_detected | ~rst_n, next_address, 1'b1, 1'b1,
 Register WORKING_ADDRESS_FOR_CACHE(clk, ~miss_detected | ~rst_n, next_address_c, 1'b1, 1'b1, 1'b0, current_address_c, );
 
 // Incrementer for segment count and delay count 
-adder_4bit_cla_simple COUNT_REQ_INC(,, count_reg_D, count_reg_Q, 1 & miss_detected, 1'b0); 
-adder_4bit_cla_simple COUNT_ADR_INC(,, addr_creg_D, addr_creg_Q, 1 & miss_detected, 1'b0); 
+adder_4bit_cla_simple COUNT_REQ_INC(,, count_reg_D, count_reg_Q, {3'b000 , miss_detected}, 1'b0); 
+adder_4bit_cla_simple COUNT_ADR_INC(,, addr_creg_D, addr_creg_Q, {3'b000 , miss_detected}, 1'b0); 
 
 // Increment the current address by two
 adder_16bit_cla_simple ADDRESS_INC(current_address_plus_two, current_address, 16'b0000000000000010);
