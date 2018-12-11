@@ -186,6 +186,8 @@ module cpu(clk, rst_n, hlt, pc);
         .RFdst_in(mem_RFdst), .RFdst_ou(wb_RFdst),
         .gppr1_in(mem_DataToBeWrittenToPR), .gppr1_ou(wb_RFwriteData),
         .flag_in(mem_flag), .flag_ou(wb_flag),
-        .flagwe_in(mem_flagwe), .flagwe_ou(wb_flagwe)
+        .flagwe_in(mem_flagwe), .flagwe_ou(wb_flagwe), .DataWE_in(1'b0),
+	.ALU1Src_in(1'b0), .ALU2Src_in(1'b0), .inst_in({16{1'b0}}), .pc_in({16{1'b0}}), .gppr2_in({16{1'b0}}), .gppr3_in({4{1'b0}}), .gppr4_in({4{1'b0}}),
+	.ALU1Src_ou(), .ALU2Src_ou(), .inst_ou(), .pc_ou(), .gppr2_ou(), .gppr3_ou(), .gppr4_ou(), .DataWE_ou()
     );
 endmodule
