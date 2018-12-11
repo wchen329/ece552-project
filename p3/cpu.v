@@ -167,7 +167,9 @@ module cpu(clk, rst_n, hlt, pc);
         .inst_in(ex_inst), .inst_ou(mem_inst),
         .gppr1_in(ex_resultToPR), .gppr1_ou(mem_AluResult),
         .gppr2_in(mem_RFout2_in), .gppr2_ou(mem_DataWriteDataFromPR),
-        .gppr3_in(ex_RFsrc2), .gppr3_ou(mem_DataWriteSrcReg)
+        .gppr3_in(ex_RFsrc2), .gppr3_ou(mem_DataWriteSrcReg),
+	.ALU1Src_ou(), .ALU2Src_ou(), .pc_ou(), .gppr4_ou(), 
+	.ALU1Src_in(1'b0), .ALU2Src_in(1'b0), .pc_in({16{1'b0}}), .gppr4_in(4'b000)
     );
 
 
