@@ -96,14 +96,17 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	assign hit_way_1 = valids[1] & (tag_in == tag_out_1);
 	assign miss_occurred = r_enabled & ~(hit_way_0 | hit_way_1);
 	assign hit_occurred = r_enabled & (hit_way_0 | hit_way_1);
-	assign Data_Out = DataArray_Out;
+	assign Data_Out = r_enabled ?
+					block_decode_data != {128{1'b0}} ?
+							DataArray_Out
+					: {16{1'b0}}
+				: {16{1'b0}};
 	assign tag_in = Address_Oper[15:10];
 	assign tag_out_0 = tag_raw_out_0[5:0];
 	assign tag_out_1 = tag_raw_out_1[5:0];
 	assign set_index = Address_Oper[9:4];
 	assign valids = {tag_raw_out_1[7], tag_raw_out_0[7]};
 	assign block_decode_ze = {{64{1'b0}}, block_decode};
-	//assign block_decode_data =  == 0 ? block_decode_ze : block_decode_ze << 64;
  	assign word_select = Address_Oper[3:1]; 	// For FSM designer: change these address bits to change word offset index when filling
 	assign lrus_n = {tag_raw_out_1[6], tag_raw_out_0[6]}; 
 

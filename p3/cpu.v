@@ -98,7 +98,7 @@ module cpu(clk, rst_n, hlt, pc);
     assign id_RFdst = id_inst[11:8];
     ControlUnit ctrl(.opcode(id_inst[15:12]), .HLT(id_hlt),
         .PCwe(pc_we), .RFwe(id_RFwe), .MemWE(id_DataWe), .FLAGwe(id_flagwe),
-        .ALU2Src(id_ALU2Src), .A2Src(id_A2Src));
+        .ALU2Src(id_ALU2Src), .A2Src(id_A2Src), .NeedBranch(), .DwMUX());
     assign id_ALU1Src = id_inst[15:13] == 3'b101;
 
 
@@ -116,7 +116,7 @@ module cpu(clk, rst_n, hlt, pc);
         .gppr1_in(id_RFout1), .gppr1_ou(ex_RFout1),
         .gppr2_in(id_RFout2), .gppr2_ou(ex_RFout2),
         .gppr3_in(id_RFsrc1), .gppr3_ou(ex_RFsrc1),
-        .gppr4_in(id_RFsrc2), .gppr4_ou(ex_RFsrc2)
+        .gppr4_in(id_RFsrc2), .gppr4_ou(ex_RFsrc2), .flag_in(3'b000), .flag_ou()
     );
 
     // EX stage
@@ -167,7 +167,9 @@ module cpu(clk, rst_n, hlt, pc);
         .inst_in(ex_inst), .inst_ou(mem_inst),
         .gppr1_in(ex_resultToPR), .gppr1_ou(mem_AluResult),
         .gppr2_in(mem_RFout2_in), .gppr2_ou(mem_DataWriteDataFromPR),
-        .gppr3_in(ex_RFsrc2), .gppr3_ou(mem_DataWriteSrcReg)
+        .gppr3_in(ex_RFsrc2), .gppr3_ou(mem_DataWriteSrcReg),
+	.ALU1Src_ou(), .ALU2Src_ou(), .pc_ou(), .gppr4_ou(), 
+	.ALU1Src_in(1'b0), .ALU2Src_in(1'b0), .pc_in({16{1'b0}}), .gppr4_in(4'b000)
     );
 
 
@@ -186,6 +188,8 @@ module cpu(clk, rst_n, hlt, pc);
         .RFdst_in(mem_RFdst), .RFdst_ou(wb_RFdst),
         .gppr1_in(mem_DataToBeWrittenToPR), .gppr1_ou(wb_RFwriteData),
         .flag_in(mem_flag), .flag_ou(wb_flag),
-        .flagwe_in(mem_flagwe), .flagwe_ou(wb_flagwe)
+        .flagwe_in(mem_flagwe), .flagwe_ou(wb_flagwe), .DataWE_in(1'b0),
+	.ALU1Src_in(1'b0), .ALU2Src_in(1'b0), .inst_in({16{1'b0}}), .pc_in({16{1'b0}}), .gppr2_in({16{1'b0}}), .gppr3_in({4{1'b0}}), .gppr4_in({4{1'b0}}),
+	.ALU1Src_ou(), .ALU2Src_ou(), .inst_ou(), .pc_ou(), .gppr2_ou(), .gppr3_ou(), .gppr4_ou(), .DataWE_ou()
     );
 endmodule
