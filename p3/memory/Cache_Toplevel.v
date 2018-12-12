@@ -35,8 +35,8 @@
 module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_Out, miss_occurred);
 
 
-	// LRU Registers
-	reg [1:0] lru_w0, lru_w1, lru_w2, lru_w3;
+	// LRU Signals
+	wire [1:0] lru_w0, lru_w1, lru_w2, lru_w3;
 
 	// Input List
 
@@ -225,82 +225,13 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					miss_way[3] == 1 ? tag_in : tag_raw_out_3
 				: tag_out_3
 			   : tag_out_3;
+
+	// LRU Holder
+	LRU_SuperFile LRU_FILE(.clk(clk), .rst(rst), .select(set_index), .out_0(lru_w0), .out_1(lru_w1), .out_2(lru_w2), .out_3(lru_w3), .hit_way_1(hit_way_1),
+		.hit_way_2(hit_way_2), .hit_way_3(hit_way_3), .hit_way_0(hit_way_0), .hit_occurred(hit_occurred), .miss_occurred(miss_occurred),
+		.cache_tag_write(cache_tag_write), .miss_way(miss_way));
 	
-	// New LRU using better Verilog
-	// Register behavior for new LRU
-	always @(posedge clk) begin
-
-		if(rst == 1) begin
-			lru_w0 <= 2'b00;
-			lru_w1 <= 2'b00;
-			lru_w2 <= 2'b00;
-			lru_w3 <= 2'b00;
-		end
-
-		/* LRU
-		 * -
-		 * When to update?
-		 *
-		 * HIT - Always update. Set hit way to 2'b11 decrement others.
-		 * MISS - Always update. Set evicted missed way to 2'b11 and decrement others. Write simultaneously with tag.
-		 *
-		 */
-		if(cache_tag_we) begin
-			if(lru_w0 != 2'b00 && miss_way != 4'b0001) begin
-				lru_w0 <= (lru_w0 - 1);
-			end
-			if(lru_w1 != 2'b00 && miss_way != 4'b0010) begin
-				lru_w1 <= (lru_w1 - 1);
-			end
-			if(lru_w2 != 2'b00 && miss_way != 4'b0100) begin
-				lru_w2 <= (lru_w2 - 1);
-			end
-			if(lru_w3 != 2'b00 && miss_way != 4'b1000) begin
-				lru_w3 <= (lru_w3 - 1);
-			end
-
-			if(lru_w0 == 2'b00 && miss_way == 4'b0001) begin
-				lru_w0 <= 2'b11;
-			end
-			if(lru_w1 == 2'b00 && miss_way == 4'b0010) begin
-				lru_w1 <= 2'b11;
-			end
-			if(lru_w2 == 2'b00 && miss_way == 4'b0100) begin
-				lru_w2 <= 2'b11;
-			end
-			if(lru_w3 == 2'b00 && miss_way == 4'b1000) begin
-				lru_w3 <= 2'b11;
-			end
-		end
-
-		if(hit_occurred) begin
-			if(hit_way_0) begin
-							lru_w0 <= 2'b11;
-				if(lru_w1 != 2'b00) lru_w1 <= (lru_w1 - 1);
-				if(lru_w2 != 2'b00) lru_w2 <= (lru_w2 - 1);
-				if(lru_w3 != 2'b00) lru_w3 <= (lru_w3 - 1);
-			end
-			if(hit_way_1) begin
-				if(lru_w0 != 2'b00) lru_w0 <= (lru_w0 - 1);
-							lru_w1 <= 2'b11;
-				if(lru_w2 != 2'b00) lru_w2 <= (lru_w2 - 1);
-				if(lru_w3 != 2'b00) lru_w3 <= (lru_w3 - 1);
-			end
-			if(hit_way_2) begin
-				if(lru_w0 != 2'b00) lru_w0 <= (lru_w0 - 1);
-				if(lru_w1 != 2'b00) lru_w1 <= (lru_w1 - 1);
-							lru_w2 <= 2'b11;
-				if(lru_w3 != 2'b00) lru_w3 <= (lru_w3 - 1);
-			end
-			if(hit_way_3) begin
-				if(lru_w0 != 2'b00) lru_w0 <= (lru_w0 - 1);
-				if(lru_w1 != 2'b00) lru_w1 <= (lru_w1 - 1);
-				if(lru_w2 != 2'b00) lru_w2 <= (lru_w2 - 1);
-							lru_w3 <= 2'b11;
-			end
-		end
-
-	end
+	// Assign miss ways
 
 	assign miss_way = lru_w0 == 2'b00 ? 4'b0001 :
 			  lru_w1 == 2'b00 ? 4'b0010 :
