@@ -231,23 +231,31 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 	always @(posedge clk) begin
 
 		if(rst == 1) begin
-			assign lru_w0 = 2'b00;
-			assign lru_w1 = 2'b00;
-			assign lru_w2 = 2'b00;
-			assign lru_w3 = 2'b00;
+			lru_w0 <= 2'b00;
+			lru_w1 <= 2'b00;
+			lru_w2 <= 2'b00;
+			lru_w3 <= 2'b00;
 		end
 
+		/* LRU
+		 * -
+		 * When to update?
+		 *
+		 * HIT - Always update. Set hit way to 2'b11 decrement others.
+		 * MISS - Always update. Set evicted missed way to 2'b11 and decrement others. Write simultaneously with tag.
+		 *
+		 */
 		if(cache_tag_we) begin
-			if(lru_w0 == 2'b00 && miss_way != 4'b0001) begin
+			if(lru_w0 != 2'b00 && miss_way != 4'b0001) begin
 				lru_w0 <= (lru_w0 - 1);
 			end
-			if(lru_w1 == 2'b00 && miss_way != 4'b0010) begin
+			if(lru_w1 != 2'b00 && miss_way != 4'b0010) begin
 				lru_w1 <= (lru_w1 - 1);
 			end
-			if(lru_w2 == 2'b00 && miss_way != 4'b0100) begin
+			if(lru_w2 != 2'b00 && miss_way != 4'b0100) begin
 				lru_w2 <= (lru_w2 - 1);
 			end
-			if(lru_w3 == 2'b00 && miss_way != 4'b1000) begin
+			if(lru_w3 != 2'b00 && miss_way != 4'b1000) begin
 				lru_w3 <= (lru_w3 - 1);
 			end
 
@@ -265,12 +273,39 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 			end
 		end
 
+		if(hit_occurred) begin
+			if(hit_way_0) begin
+							lru_w0 <= 2'b11;
+				if(lru_w1 != 2'b00) lru_w1 <= (lru_w1 - 1);
+				if(lru_w2 != 2'b00) lru_w2 <= (lru_w2 - 1);
+				if(lru_w3 != 2'b00) lru_w3 <= (lru_w3 - 1);
+			end
+			if(hit_way_1) begin
+				if(lru_w0 != 2'b00) lru_w0 <= (lru_w0 - 1);
+							lru_w1 <= 2'b11;
+				if(lru_w2 != 2'b00) lru_w2 <= (lru_w2 - 1);
+				if(lru_w3 != 2'b00) lru_w3 <= (lru_w3 - 1);
+			end
+			if(hit_way_2) begin
+				if(lru_w0 != 2'b00) lru_w0 <= (lru_w0 - 1);
+				if(lru_w1 != 2'b00) lru_w1 <= (lru_w1 - 1);
+							lru_w2 <= 2'b11;
+				if(lru_w3 != 2'b00) lru_w3 <= (lru_w3 - 1);
+			end
+			if(hit_way_3) begin
+				if(lru_w0 != 2'b00) lru_w0 <= (lru_w0 - 1);
+				if(lru_w1 != 2'b00) lru_w1 <= (lru_w1 - 1);
+				if(lru_w2 != 2'b00) lru_w2 <= (lru_w2 - 1);
+							lru_w3 <= 2'b11;
+			end
+		end
+
 	end
 
 	assign miss_way = lru_w0 == 2'b00 ? 4'b0001 :
-			  lru_w0 == 2'b00 ? 4'b0010 :
-			  lru_w0 == 2'b00 ? 4'b0100 :
-			  lru_w0 == 2'b00 ? 4'b1000 :
+			  lru_w1 == 2'b00 ? 4'b0010 :
+			  lru_w2 == 2'b00 ? 4'b0100 :
+			  lru_w3 == 2'b00 ? 4'b1000 :
 			  4'b0000;
 
 	assign tag_in_full_0 = {valid_next_0, tag_next_0};
