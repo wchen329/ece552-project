@@ -1,0 +1,34 @@
+Warning: Design 'cpu' has '2' unresolved references. For more detailed information, use the "link" command. (UID-341)
+report_area
+ 
+****************************************
+Report : area
+Design : cpu
+Version: N-2017.09-SP5
+Date   : Tue Dec 11 20:46:51 2018
+****************************************
+
+Library(s) Used:
+
+    tcbn40lpbwptc (File: /cae/apps/data/tsmclibs-2013/digital/Front_End/timing_power_noise/NLDM/tcbn40lpbwp_120b/tcbn40lpbwptc.db)
+
+Number of ports:                           19
+Number of nets:                          3396
+Number of cells:                         3837
+Number of combinational cells:           2669
+Number of sequential cells:              1168
+Number of macros/black boxes:               0
+Number of buf/inv:                       1020
+Number of references:                     291
+
+Combinational area:               3802.831261
+Buf/Inv area:                      977.256022
+Noncombinational area:            5941.504762
+Macro/Black Box area:                0.000000
+Net Interconnect area:      undefined  (Wire load has zero net area)
+
+Total cell area:                  9744.336023
+Total area:                 undefined
+
+Information: This design contains black box (unknown) components. (RPT-8)
+1
