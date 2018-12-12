@@ -44,7 +44,7 @@ module cpu(clk, rst_n, hlt, pc);
     wire global_stall;
 
     assign mem_miss_stall = d_miss | i_miss;		// freeze pipeline if miss detected
-    assign global_stall = mem_miss_stall | stall;	
+    assign global_stall = mem_miss_stall | stall;
 
     Memory_Controller MC(.clk(clk), .rst(rst), .d_enable(mem_inst[15:13] == 3'b100), .if_we(1'b0), .dm_we(mem_DataWe), .if_addr(pc), .dm_addr(mem_DataAddr), .if_data_out(if_inst),
 	.dm_data_out(mem_DataReadData), .if_data_in(16'h0), .dm_data_in(mem_DataWriteData), .if_miss(i_miss), .dm_miss(d_miss));
@@ -59,12 +59,15 @@ module cpu(clk, rst_n, hlt, pc);
     assign rst = ~rst_n;
     assign hlt = wb_hlt;
     assign hlt_fetch_not_yet = if_inst[15:12] != 4'b1111 ? 1 :
-			       id_inst[15:13] != 4'b110 ? 0 : taken ? 1 : 0;
+			       id_inst[15:13] != 4'b110 ? 0 : mispredicted ? 1 : 0;
 
     // IF stage
-    assign flush = taken;
+    wire [15:0] predictedPc;
+    wire mispredicted;
+    BranchPredictFSM branchPrediction(clk, rst, ~pc_we | stall, pc, if_inst, predictedPc, taken, mispredicted);
+    assign flush = mispredicted;
     CLAdder16 add0(pc, 16'h2, pcPlus2);
-    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall & (hlt_fetch_not_yet | hlt_fetch_state) & ~mem_miss_stall), .P(taken?pcTarget:pcPlus2), .Q(pc));
+    PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall & (hlt_fetch_not_yet | hlt_fetch_state) & ~mem_miss_stall), .P(mispredicted?pcTarget:predictedPc), .Q(pc));
     IFID_Pipe_Register IFID_PR(.clk(clk), .rst(rst), .WE(pc_we & ~stall & ~mem_miss_stall ), .flush(flush), .inst_next(if_inst), .inst(id_inst), .pc_in(pc), .pc_out(id_pc));
 
     // ID stage, including all the control stuff
@@ -168,7 +171,7 @@ module cpu(clk, rst_n, hlt, pc);
         .gppr1_in(ex_resultToPR), .gppr1_ou(mem_AluResult),
         .gppr2_in(mem_RFout2_in), .gppr2_ou(mem_DataWriteDataFromPR),
         .gppr3_in(ex_RFsrc2), .gppr3_ou(mem_DataWriteSrcReg),
-	.ALU1Src_ou(), .ALU2Src_ou(), .pc_ou(), .gppr4_ou(), 
+	.ALU1Src_ou(), .ALU2Src_ou(), .pc_ou(), .gppr4_ou(),
 	.ALU1Src_in(1'b0), .ALU2Src_in(1'b0), .pc_in({16{1'b0}}), .gppr4_in(4'b000)
     );
 

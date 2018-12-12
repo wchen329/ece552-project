@@ -15,4 +15,5 @@ _info
 _vmake
 *.mpf
 testing/reports
+testing/cpu
 tmp.*

@@ -1,0 +1,28 @@
+    add r0, r0, r0 # set Z=1
+    b 001, L1      # take, miss, goto weak_nt
+    hlt            # 
+L1:
+    b 001, L2      # take, miss, goto weak_t
+    xor r0, r0, r0 # nop
+L2:
+    b 001, L3      # take, hit, goto strong_t
+    xor r0, r0, r0 # nop
+L3:
+    b 001, L4      # take, hit, stay strong_t
+    xor r0, r0, r0 # nop
+L4:
+    b 001, L5      # take, hit,
+    xor r0, r0, r0 # nop
+L5:
+    b 000, L6      # !take, miss, goto weak_t
+    b 000, L6      # !take, miss, goto weak_nt
+    b 000, L6      # !take, hit, goto strong_nt
+    b 000, L6      # !take, hit, stay strong_nt
+    b 001, L6      # take, miss, goto weak_nt;
+    xor r0, r0, r0 # nop
+L6:
+    llb r1, 4
+    lhb r1, 0
+    br 001, r1     # take, miss, goto weak_t;
+    add r0, r0, r0 # avoid xxxx when mispredict
+
