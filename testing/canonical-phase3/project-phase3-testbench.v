@@ -202,13 +202,13 @@ module cpu_ptb();
    assign ICacheReq = DUT.pcRegister.we;
    // Signal indicating a valid instruction read request to cache
    
-   assign ICacheHit = ~DUT.i_miss;
+   assign ICacheHit = ~DUT.i_miss & DUT.pcRegister.we;
    // Signal indicating a valid instruction cache hit
 
-   assign DCacheReq = DUT.mem_inst[15:12]==4'b1000;
+   assign DCacheReq = DUT.mem_inst[15:13]==4'b100;
    // Signal indicating a valid instruction data read or write request to cache
    
-   assign DCacheHit = ~DUT.d_miss;
+   assign DCacheHit = ~DUT.d_miss & (DUT.mem_inst[15:13]==4'b100);
    // Signal indicating a valid data cache hit
 
 
