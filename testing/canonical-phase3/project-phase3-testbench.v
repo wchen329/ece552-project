@@ -199,10 +199,10 @@ module cpu_ptb();
    assign MemDataOut = DUT.mem_DataReadData;
    // If there's a memory read in this cycle, this is the data being read out of memory (16 bits)
 
-   assign ICacheReq = DUT.pcRegister.we;
+   assign ICacheReq = ~DUT.hlt;
    // Signal indicating a valid instruction read request to cache
    
-   assign ICacheHit = ~DUT.i_miss & DUT.pcRegister.we;
+   assign ICacheHit = ~DUT.i_miss & ~DUT.hlt;
    // Signal indicating a valid instruction cache hit
 
    assign DCacheReq = DUT.mem_inst[15:13]==4'b100;
