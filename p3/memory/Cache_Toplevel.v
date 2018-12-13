@@ -62,7 +62,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					// full tag in for ways 0 and 1 
 	wire [3:0] valids;		// the valid bits valids[0] is for WAY_0 and valids[1] is for WAY_1,
 	wire [6:0] tag_in;		// tag to update the cache with
-	wire [5:0] tag_out_0, tag_out_1, tag_out_2, tag_out_3;
+	wire [6:0] tag_out_0, tag_out_1, tag_out_2, tag_out_3;
 					// actual tag contained in block
 	wire [4:0] set_index;		// set index of current request
 	wire cache_data_we;		// data write enable, passed from Fill FSM
@@ -107,7 +107,7 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 					: {16{1'b0}}
 				: {16{1'b0}};
 	assign tag_in = Address_Oper[15:9];
-	assign tag_out_0 = tag_raw_out_0[5:0]; assign tag_out_1 = tag_raw_out_1[5:0]; assign tag_out_2 = tag_raw_out_2[5:0]; assign tag_out_3 = tag_raw_out_3[5:0];
+	assign tag_out_0 = tag_raw_out_0[6:0]; assign tag_out_1 = tag_raw_out_1[6:0]; assign tag_out_2 = tag_raw_out_2[6:0]; assign tag_out_3 = tag_raw_out_3[6:0];
 	assign set_index = Address_Oper[8:4];
 	assign valids = {tag_raw_out_3[7], tag_raw_out_2[7], tag_raw_out_1[7], tag_raw_out_0[7]};
 	assign block_decode_ze = {{96{1'b0}}, block_decode};
@@ -180,13 +180,13 @@ module Cache_Toplevel(clk, rst, Address_Oper, r_enabled, cacheop, Data_In, Data_
 
 
 	assign valid_next_2 = cacheop == 2'b10 ?
-				miss_occurred == 2 ?
+				miss_occurred == 1 ?
 					miss_way[2] == 1 ? 1 : valids[2]
 				: valids[2]
 			: valids[2];	
 
 	assign valid_next_3 = cacheop == 2'b10 ?
-				miss_occurred == 3 ?
+				miss_occurred == 1 ?
 					miss_way[3] == 1 ? 1 : valids[3]
 				: valids[3]
 			: valids[3];	

@@ -29,7 +29,7 @@ module LRU_SuperFile(clk, rst, select, out_0, out_1, out_2, out_3, hit_way_1, hi
 		.cache_tag_write(cache_tag_write), .r_active(select==5'b00101));
 	LRU_File FILE_6(.clk(clk), .rst(rst), .miss_way(miss_way), .out_0(out_0), .out_1(out_1), .out_2(out_2), .out_3(out_3),
 		.hit_way_1(hit_way_1), .hit_way_2(hit_way_2), .hit_way_3(hit_way_3), .hit_way_0(hit_way_0), .hit_occurred(hit_occurred), .miss_occurred(miss_occurred),
-		.cache_tag_write(cache_tag_write), .r_active(select==5'b00101));
+		.cache_tag_write(cache_tag_write), .r_active(select==5'b00110));
 	LRU_File FILE_7(.clk(clk), .rst(rst), .miss_way(miss_way), .out_0(out_0), .out_1(out_1), .out_2(out_2), .out_3(out_3),
 		.hit_way_1(hit_way_1), .hit_way_2(hit_way_2), .hit_way_3(hit_way_3), .hit_way_0(hit_way_0), .hit_occurred(hit_occurred), .miss_occurred(miss_occurred),
 		.cache_tag_write(cache_tag_write), .r_active(select==5'b00111));
