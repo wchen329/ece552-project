@@ -64,7 +64,7 @@ module cpu(clk, rst_n, hlt, pc);
     // IF stage
     wire [15:0] predictedPc;
     wire mispredicted;
-    BranchPredictFSM branchPrediction(clk, rst, ~pc_we | stall, pc, if_inst, predictedPc, taken, mispredicted);
+    BranchPredictFSM branchPrediction(clk, rst, (~pc_we | stall | mem_miss_stall) & ~rst, pc, if_inst, predictedPc, taken, mispredicted);
     assign flush = mispredicted;
     CLAdder16 add0(pc, 16'h2, pcPlus2);
     PCRegister pcRegister(.clk(clk), .rst(rst), .we(pc_we & ~stall & (hlt_fetch_not_yet | hlt_fetch_state) & ~mem_miss_stall), .P(mispredicted?pcTarget:predictedPc), .Q(pc));

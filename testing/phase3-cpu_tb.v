@@ -128,6 +128,7 @@ module cpu_ptb();
         $fdisplay(sim_log_file, "        wb_RFwriteData:%x", DUT.wb_RFwriteData);
         $fdisplay(sim_log_file, "        wb_flag:%x", DUT.wb_flag);
         $fdisplay(sim_log_file, "        wb_flagwe:%x", DUT.wb_flagwe);
+        $fdisplay(sim_log_file, "        mem_miss_stall:%x", DUT.mem_miss_stall);
     end
     endtask
 
