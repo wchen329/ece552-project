@@ -1,0 +1,19 @@
+	LHB R1, 0x11
+	LHB R2, 0x21
+	LHB R3, 0x31
+	LHB R4, 0x41
+	LHB R5, 0x51
+	LLB R7, 0x22
+	LHB R7, 0x33
+
+	SW R7, R1, 0
+	SW R7, R2, 0
+	SW R7, R3, 0
+	SW R7, R4, 0
+	LW R8, R4, 0
+	LW R9, R3, 0	
+	LW R10, R2, 0
+	SW R7, R5, 0
+	LW R11, R1, 0
+
+	HLT
