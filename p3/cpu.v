@@ -21,6 +21,8 @@ module cpu(clk, rst_n, hlt, pc);
     wire id_RFwe, id_DataWe, id_ALU1Src, id_ALU2Src, id_hlt, id_A2Src;
     wire [2:0] id_flagwe;
     wire [3:0] id_RFdst;
+    wire [15:0] predictedPc;
+    wire mispredicted;
 
 
     wire[15:0] ex_RFout1, ex_RFout2, ex_inst, ex_alu1, ex_alu2, ex_aluout;
@@ -62,8 +64,6 @@ module cpu(clk, rst_n, hlt, pc);
 			       id_inst[15:13] != 4'b110 ? 0 : mispredicted ? 1 : 0;
 
     // IF stage
-    wire [15:0] predictedPc;
-    wire mispredicted;
     BranchPredictFSM branchPrediction(clk, rst, (~pc_we | stall | mem_miss_stall) & ~rst, pc, if_inst, predictedPc, taken, mispredicted);
     assign flush = mispredicted;
     CLAdder16 add0(pc, 16'h2, pcPlus2);
