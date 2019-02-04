@@ -1,7 +1,7 @@
-# WHO ARE WE 552-PROJECT LICENSE
+# WHO ARE WE PROJECT LICENSE
 *Modified from 3-Clause BSD License*
 
-## © 2018 Who Are We
+## © 2019 Who Are We
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
