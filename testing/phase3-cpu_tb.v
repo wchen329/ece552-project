@@ -53,6 +53,86 @@ module cpu_ptb();
         end
     endtask
 
+    task dumpToplevel;
+    begin
+        $fdisplay(sim_log_file, "        hlt:%x", DUT.hlt);
+        $fdisplay(sim_log_file, "        pc:%x", DUT.pc);
+        $fdisplay(sim_log_file, "        flush:%x", DUT.flush);
+        $fdisplay(sim_log_file, "        taken:%x", DUT.taken);
+        $fdisplay(sim_log_file, "        stall:%x", DUT.stall);
+        $fdisplay(sim_log_file, "        pc_we:%x", DUT.pc_we);
+        $fdisplay(sim_log_file, "        pcTarget:%x", DUT.pcTarget);
+        $fdisplay(sim_log_file, "        pcPlus2:%x", DUT.pcPlus2);
+        $fdisplay(sim_log_file, "        if_inst:%x", DUT.if_inst);
+        $fdisplay(sim_log_file, "        id_pc:%x", DUT.id_pc);
+        $fdisplay(sim_log_file, "        id_inst:%x", DUT.id_inst);
+        $fdisplay(sim_log_file, "        id_flagout:%x", DUT.id_flagout);
+        $fdisplay(sim_log_file, "        id_forwardedFlag:%x", DUT.id_forwardedFlag);
+        $fdisplay(sim_log_file, "        id_RFsrc1:%x", DUT.id_RFsrc1);
+        $fdisplay(sim_log_file, "        id_RFsrc2:%x", DUT.id_RFsrc2);
+        $fdisplay(sim_log_file, "        id_RFout1:%x", DUT.id_RFout1);
+        $fdisplay(sim_log_file, "        id_RFout2:%x", DUT.id_RFout2);
+        $fdisplay(sim_log_file, "        id_forwardedBranchRegisterTarget:%x", DUT.id_forwardedBranchRegisterTarget);
+        $fdisplay(sim_log_file, "        id_brForwardSel:%x", DUT.id_brForwardSel);
+        $fdisplay(sim_log_file, "        id_aluSrc1:%x", DUT.id_aluSrc1);
+        $fdisplay(sim_log_file, "        id_aluSrc2:%x", DUT.id_aluSrc2);
+        $fdisplay(sim_log_file, "        id_RFwe:%x", DUT.id_RFwe);
+        $fdisplay(sim_log_file, "        id_DataWe:%x", DUT.id_DataWe);
+        $fdisplay(sim_log_file, "        id_ALU1Src:%x", DUT.id_ALU1Src);
+        $fdisplay(sim_log_file, "        id_ALU2Src:%x", DUT.id_ALU2Src);
+        $fdisplay(sim_log_file, "        id_hlt:%x", DUT.id_hlt);
+        $fdisplay(sim_log_file, "        id_A2Src:%x", DUT.id_A2Src);
+        $fdisplay(sim_log_file, "        id_flagwe:%x", DUT.id_flagwe);
+        $fdisplay(sim_log_file, "        id_RFdst:%x", DUT.id_RFdst);
+        $fdisplay(sim_log_file, "        ex_RFout1:%x", DUT.ex_RFout1);
+        $fdisplay(sim_log_file, "        ex_RFout2:%x", DUT.ex_RFout2);
+        $fdisplay(sim_log_file, "        ex_inst:%x", DUT.ex_inst);
+        $fdisplay(sim_log_file, "        ex_alu1:%x", DUT.ex_alu1);
+        $fdisplay(sim_log_file, "        ex_alu2:%x", DUT.ex_alu2);
+        $fdisplay(sim_log_file, "        ex_aluout:%x", DUT.ex_aluout);
+        $fdisplay(sim_log_file, "        ex_RFsrc1:%x", DUT.ex_RFsrc1);
+        $fdisplay(sim_log_file, "        ex_RFsrc2:%x", DUT.ex_RFsrc2);
+        $fdisplay(sim_log_file, "        ex_aluSrc1:%x", DUT.ex_aluSrc1);
+        $fdisplay(sim_log_file, "        ex_aluSrc2:%x", DUT.ex_aluSrc2);
+        $fdisplay(sim_log_file, "        ex_RFdst:%x", DUT.ex_RFdst);
+        $fdisplay(sim_log_file, "        ex_sel1:%x", DUT.ex_sel1);
+        $fdisplay(sim_log_file, "        ex_sel2:%x", DUT.ex_sel2);
+        $fdisplay(sim_log_file, "        ex_ALU1Src:%x", DUT.ex_ALU1Src);
+        $fdisplay(sim_log_file, "        ex_ALU2Src:%x", DUT.ex_ALU2Src);
+        $fdisplay(sim_log_file, "        ex_aluFlagZVN:%x", DUT.ex_aluFlagZVN);
+        $fdisplay(sim_log_file, "        ex_flagwe:%x", DUT.ex_flagwe);
+        $fdisplay(sim_log_file, "        ex_RFwe:%x", DUT.ex_RFwe);
+        $fdisplay(sim_log_file, "        ex_DataWe:%x", DUT.ex_DataWe);
+        $fdisplay(sim_log_file, "        ex_hlt:%x", DUT.ex_hlt);
+        $fdisplay(sim_log_file, "        ex_pc:%x", DUT.ex_pc);
+        $fdisplay(sim_log_file, "        ex_resultToPR:%x", DUT.ex_resultToPR);
+        $fdisplay(sim_log_file, "        mem_DataWe:%x", DUT.mem_DataWe);
+        $fdisplay(sim_log_file, "        mem_UseAluResult:%x", DUT.mem_UseAluResult);
+        $fdisplay(sim_log_file, "        mem_RFwe:%x", DUT.mem_RFwe);
+        $fdisplay(sim_log_file, "        mem_hlt:%x", DUT.mem_hlt);
+        $fdisplay(sim_log_file, "        mem_DataAddr:%x", DUT.mem_DataAddr);
+        $fdisplay(sim_log_file, "        mem_inst:%x", DUT.mem_inst);
+        $fdisplay(sim_log_file, "        mem_DataWriteData:%x", DUT.mem_DataWriteData);
+        $fdisplay(sim_log_file, "        mem_DataWriteDataFromPR:%x", DUT.mem_DataWriteDataFromPR);
+        $fdisplay(sim_log_file, "        mem_DataReadData:%x", DUT.mem_DataReadData);
+        $fdisplay(sim_log_file, "        mem_AluResult:%x", DUT.mem_AluResult);
+        $fdisplay(sim_log_file, "        mem_DataWriteSrcReg:%x", DUT.mem_DataWriteSrcReg);
+        $fdisplay(sim_log_file, "        mem_RFdst:%x", DUT.mem_RFdst);
+        $fdisplay(sim_log_file, "        mem_flag:%x", DUT.mem_flag);
+        $fdisplay(sim_log_file, "        mem_flagwe:%x", DUT.mem_flagwe);
+        $fdisplay(sim_log_file, "        mem_MemMemForwarding:%x", DUT.mem_MemMemForwarding);
+        $fdisplay(sim_log_file, "        mem_DataToBeWrittenToPR:%x", DUT.mem_DataToBeWrittenToPR);
+        $fdisplay(sim_log_file, "        wb_RFwe:%x", DUT.wb_RFwe);
+        $fdisplay(sim_log_file, "        wb_hlt:%x", DUT.wb_hlt);
+        $fdisplay(sim_log_file, "        wb_RFdst:%x", DUT.wb_RFdst);
+        $fdisplay(sim_log_file, "        wb_RFwriteData:%x", DUT.wb_RFwriteData);
+        $fdisplay(sim_log_file, "        wb_flag:%x", DUT.wb_flag);
+        $fdisplay(sim_log_file, "        wb_flagwe:%x", DUT.wb_flagwe);
+        $fdisplay(sim_log_file, "        mem_miss_stall:%x", DUT.mem_miss_stall);
+    end
+    endtask
+
+
 
 
 
@@ -68,7 +148,7 @@ module cpu_ptb();
 
         trace_file = $fopen("verilogsim.trace");
         sim_log_file = $fopen("verilogsim.log");
-        $fdisplay(sim_log_file, "SIMLOG:: Cycle             PC:          I:          R:[WE] [WR] [DATA] M: [R][W]     [Addr]     [In]     [OutFromMem]");
+        $fdisplay(sim_log_file, "SIMLOG:: Cycle             PC:          I:          R:[WE] [WR] [DATA] M: [R][W]     [Addr]     [In]     [OutFromMem]   PREDICT: [pc] [predict] [taken] [mis] [newtarget]");
     end
 
     /* Clock and Reset */
@@ -115,7 +195,7 @@ module cpu_ptb();
                 ICacheReq_count = ICacheReq_count + 1;
             end
 
-            $fdisplay(sim_log_file, "SIMLOG:: Cycle %d PC: %8x I: %8x R: %d %3d %8x M: %d %d %8x %8x %8x",
+            $fdisplay(sim_log_file, "SIMLOG:: Cycle %d PC: %8x I: %8x R: %d %3d %8x M: %d %d %8x %8x %8x  PREDICT: %8x %8x %1x %1x %8x",
                                     cycle_count,
                                     PC,
                                     Inst,
@@ -126,7 +206,13 @@ module cpu_ptb();
                                     MemWrite,
                                     MemAddress,
                                     MemDataIn,
-                                    MemDataOut);
+                                    MemDataOut,
+                                    DUT.pc,
+                                    DUT.predictedPc,
+                                    DUT.taken,
+                                    DUT.mispredicted,
+                                    DUT.pcTarget);
+            dumpToplevel();
             if (RegWrite) begin
                 $fdisplay(trace_file,"REG: %d VALUE: 0x%04x", WriteRegister, WriteData);
             end

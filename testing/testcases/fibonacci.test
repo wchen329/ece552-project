@@ -6,7 +6,12 @@
 # read from M[0x0000]
 # result in M[0x0002]
 
-lw R5, R0, 0
+B 111, L0
+add r0, r0, r10 # 0x000A
+L0:
+llb r5, 2
+lhb r5, 0
+lw R5, R5, 0
 add R1, R0, R0
 add R2, R0, R0
 add R3, R0, R0
@@ -26,12 +31,14 @@ add r5, r5, r6
 b 111, L1
 
 L3:
-sw r3, r0, 1
+llb r1, 0
+lhb r1, 1
+sw r3, r1, 0
 hlt
 %% mem_in
 @0
 000A
 %% expected_mem_out
-0000: 000a
-0002: 0059
+1000: 000a
+0100: 0059
 === DUMP ENDS ===
